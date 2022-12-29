@@ -54,10 +54,11 @@ simfitRI <- function(sim = 100, seed = 99, n = 100, phi = 0.04,
     count <- count + 1
   }
   
-  for (i in 1:2) {
-    colnames(paramatrix)[count] <- paste0("alpha_", 1)
-    count <- count + 1
-  }
+  
+  colnames(paramatrix)[count] <- "alpha_b"
+  count <- count + 1
+  colnames(paramatrix)[count] <- "alpha_w"
+  count <- count + 1
   
   for (i in 1:2) {
     colnames(paramatrix)[count] <- paste0("Sig_", i, i)
