@@ -7,5 +7,6 @@
 #' @importFrom parallel mclapply parLapply makeCluster stopCluster
 #' @importFrom dplyr left_join
 #' @importFrom MASS mvrnorm
-#' @importFrom lme4 lmer fixef VarCorr
+#' @importFrom nlme lme getVarCov lmeControl
+#' @importFrom magrittr %>%
 NULL

@@ -4,14 +4,14 @@
 
 //
 // [[Rcpp::export]]
-int getHazardSF(const Eigen::Map<Eigen::VectorXd> & CumuH01,
+int getHazard(const Eigen::Map<Eigen::VectorXd> & CumuH0,
               const Eigen::Map<Eigen::VectorXd> & survtime,
-              const Eigen::Map<Eigen::VectorXd> & cmprsk,
-              const Eigen::Map<Eigen::MatrixXd> & H01,
-              Eigen::Map<Eigen::VectorXd> & CUH01,
-              Eigen::Map<Eigen::VectorXd> & HAZ01) {
+              const Eigen::Map<Eigen::VectorXd> & status,
+              const Eigen::Map<Eigen::MatrixXd> & H0,
+              Eigen::Map<Eigen::VectorXd> & CUH0,
+              Eigen::Map<Eigen::VectorXd> & HAZ0) {
   
-  int a=H01.rows();
+  int a=H0.rows();
   int k=survtime.size();
   
   int risk1_index=a-1;
@@ -22,9 +22,9 @@ int getHazardSF(const Eigen::Map<Eigen::VectorXd> & CumuH01,
   {
     if (risk1_index>=0)
     {
-      if (survtime(j) >= H01(risk1_index, 0))
+      if (survtime(j) >= H0(risk1_index, 0))
       {
-        CUH01(j) = CumuH01(risk1_index);
+        CUH0(j) = CumuH0(risk1_index);
         
       }
       else
@@ -32,7 +32,7 @@ int getHazardSF(const Eigen::Map<Eigen::VectorXd> & CumuH01,
         risk1_index--;
         if (risk1_index>=0)
         {
-          CUH01(j) = CumuH01(risk1_index);
+          CUH0(j) = CumuH0(risk1_index);
         }
       }
     }
@@ -48,12 +48,12 @@ int getHazardSF(const Eigen::Map<Eigen::VectorXd> & CumuH01,
   {
     if (risk1_index>=0)
     {
-      //gsl_vector_set(CUH01,j,gsl_vector_get(CumuH01,risk1_index));
-      if (survtime(j) == H01(risk1_index, 0))
+      //gsl_vector_set(CUH0,j,gsl_vector_get(CumuH0,risk1_index));
+      if (survtime(j) == H0(risk1_index, 0))
       {
-        HAZ01(j) = H01(risk1_index, 2);
+        HAZ0(j) = H0(risk1_index, 2);
       }
-      if (cmprsk(j) == 1)
+      if (status(j) == 1)
       {
         if (j == k-1)
         {
@@ -67,9 +67,9 @@ int getHazardSF(const Eigen::Map<Eigen::VectorXd> & CumuH01,
         {
           for (j=j+1;j<k;j++)
           {
-            if (survtime(j) == H01(risk1_index, 0))
+            if (survtime(j) == H0(risk1_index, 0))
             {
-              HAZ01(j) = H01(risk1_index, 2);
+              HAZ0(j) = H0(risk1_index, 2);
             }
             if (j == k-1)
             {
