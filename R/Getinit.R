@@ -68,7 +68,7 @@ Getinit <- function(Tdata = Tdata, Ydata = Ydata, long.formula = long.formula,
       Sig[3, 1:2] <- Sig[1:2, 3] 
     }
   } else {
-    beta = c(5, 1, -3, -3, 2)
+    beta = c(5, 2, -3, -3, 2)
     tau = c(-0.5, -0.1, 0.2, 0.1, -0.2)
     gamma = c(-0.05, 0.2, -0.1)
     alpha = c(0.5, -0.5)
