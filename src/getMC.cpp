@@ -17,7 +17,7 @@ Rcpp::List getMC(Eigen::VectorXd & beta, Eigen::VectorXd & tau,
                  const Eigen::VectorXd & FUNENW, const Eigen::MatrixXd & FUNEBNW, 
                  const Eigen::MatrixXd & FUNEBSNW, const Eigen::VectorXd & FUNE, 
                  const Eigen::MatrixXd & FUNBW, const Eigen::MatrixXd & FUNBWE, const Eigen::MatrixXd & FUNBWSE, 
-                 const Eigen::MatrixXd & FUNBWS){
+                 const Eigen::MatrixXd & FUNBWS, const double pStol){
   
   int a =H0.rows();
   int k = ni.size();
@@ -47,17 +47,23 @@ Rcpp::List getMC(Eigen::VectorXd & beta, Eigen::VectorXd & tau,
   /* calculate beta */
   for (j=0;j<k;j++) {
     for (t=0;t<nt(j);t++) {
-      for (i=0;i<ni(j);i++)
-      {
-        X1X1Ts += MultVVoutprod(X1.row(counti))/exp(MultVV(W.row(counti),tau));
-        X11s += (Y(counti)*FUNENW(j)*X1.row(counti)-
-          MultVV(Z.row(counti), FUNEBNW.row(j))*X1.row(counti))/exp(MultVV(W.row(counti),tau)); 
-        counti++;
+      
+      if (Psl(countt, 2) <= pStol) {
+        counti += ni(j);
+      } else {
+        for (i=0;i<ni(j);i++)
+        {
+          X1X1Ts += MultVVoutprod(X1.row(counti))/exp(MultVV(W.row(counti),tau));
+          X11s += (Y(counti)*FUNENW(j)*X1.row(counti)-
+            MultVV(Z.row(counti), FUNEBNW.row(j))*X1.row(counti))/exp(MultVV(W.row(counti),tau)); 
+          counti++;
+        }
+        X1X1Ts *= Psl(countt, 2)*FUNENW(j);
+        X11s *= Psl(countt, 2);
+        X1X1T += X1X1Ts;
+        X11 += X11s;
       }
-      X1X1Ts *= Psl(countt, 2)*FUNENW(j);
-      X11s *= Psl(countt, 2);
-      X1X1T += X1X1Ts;
-      X11 += X11s;
+
       X1X1Ts = Eigen::MatrixXd::Zero(p1, p1);
       X11s = Eigen::VectorXd::Zero(p1);
       countt++; 
@@ -90,20 +96,26 @@ Rcpp::List getMC(Eigen::VectorXd & beta, Eigen::VectorXd & tau,
     }
 
     for (t=0;t<nt(j);t++) {
-      for (i=0;i<ni(j);i++)
-      {
-        epsilon = Y(counti) - MultVV(X1.row(counti), beta);
-        bbT2 = MultVVoutprod(Z.row(counti))*bbT;
-        qq = pow(epsilon, 2)*FUNENW(j) - 2*epsilon*MultVV(Z.row(counti), FUNEBNW.row(j)) 
-          + bbT2.trace();
-        WWTs += qq*0.5*exp(-MultVV(W.row(counti),tau))*MultVVoutprod(W.row(counti));
-        W11s += 0.5*(exp(-MultVV(W.row(counti),tau))*qq-1)*W.row(counti); 
-        counti++;
+      
+      if (Psl(countt, 2) <= pStol) {
+        counti += ni(j);
+      } else {
+        for (i=0;i<ni(j);i++)
+        {
+          epsilon = Y(counti) - MultVV(X1.row(counti), beta);
+          bbT2 = MultVVoutprod(Z.row(counti))*bbT;
+          qq = pow(epsilon, 2)*FUNENW(j) - 2*epsilon*MultVV(Z.row(counti), FUNEBNW.row(j)) 
+            + bbT2.trace();
+          WWTs += qq*0.5*exp(-MultVV(W.row(counti),tau))*MultVVoutprod(W.row(counti));
+          W11s += 0.5*(exp(-MultVV(W.row(counti),tau))*qq-1)*W.row(counti); 
+          counti++;
+        }
+        WWTs *= Psl(countt, 2);
+        W11s *= Psl(countt, 2);
+        WWT += WWTs;
+        W11 += W11s;
       }
-      WWTs *= Psl(countt, 2);
-      W11s *= Psl(countt, 2);
-      WWT += WWTs;
-      W11 += W11s;
+
       WWTs = Eigen::MatrixXd::Zero(p1b, p1b);
       W11s = Eigen::VectorXd::Zero(p1b);
       countt++; 

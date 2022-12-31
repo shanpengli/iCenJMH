@@ -309,8 +309,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // getMC
-Rcpp::List getMC(Eigen::VectorXd& beta, Eigen::VectorXd& tau, Eigen::VectorXd& gamma, Eigen::VectorXd& alpha, Eigen::MatrixXd& H0, Eigen::MatrixXd& Sig, const Eigen::MatrixXd& Z, const Eigen::MatrixXd& X1, const Eigen::MatrixXd& W, const Eigen::VectorXd& Y, const Eigen::MatrixXd& X2, const Eigen::VectorXd& survtime, const Eigen::VectorXd& status, const Eigen::VectorXd& ni, const Eigen::VectorXd& nt, const Eigen::MatrixXd& Psl, const Eigen::VectorXd& PslT, const Eigen::VectorXd& FUNENW, const Eigen::MatrixXd& FUNEBNW, const Eigen::MatrixXd& FUNEBSNW, const Eigen::VectorXd& FUNE, const Eigen::MatrixXd& FUNBW, const Eigen::MatrixXd& FUNBWE, const Eigen::MatrixXd& FUNBWSE, const Eigen::MatrixXd& FUNBWS);
-RcppExport SEXP _iCenJMH_getMC(SEXP betaSEXP, SEXP tauSEXP, SEXP gammaSEXP, SEXP alphaSEXP, SEXP H0SEXP, SEXP SigSEXP, SEXP ZSEXP, SEXP X1SEXP, SEXP WSEXP, SEXP YSEXP, SEXP X2SEXP, SEXP survtimeSEXP, SEXP statusSEXP, SEXP niSEXP, SEXP ntSEXP, SEXP PslSEXP, SEXP PslTSEXP, SEXP FUNENWSEXP, SEXP FUNEBNWSEXP, SEXP FUNEBSNWSEXP, SEXP FUNESEXP, SEXP FUNBWSEXP, SEXP FUNBWESEXP, SEXP FUNBWSESEXP, SEXP FUNBWSSEXP) {
+Rcpp::List getMC(Eigen::VectorXd& beta, Eigen::VectorXd& tau, Eigen::VectorXd& gamma, Eigen::VectorXd& alpha, Eigen::MatrixXd& H0, Eigen::MatrixXd& Sig, const Eigen::MatrixXd& Z, const Eigen::MatrixXd& X1, const Eigen::MatrixXd& W, const Eigen::VectorXd& Y, const Eigen::MatrixXd& X2, const Eigen::VectorXd& survtime, const Eigen::VectorXd& status, const Eigen::VectorXd& ni, const Eigen::VectorXd& nt, const Eigen::MatrixXd& Psl, const Eigen::VectorXd& PslT, const Eigen::VectorXd& FUNENW, const Eigen::MatrixXd& FUNEBNW, const Eigen::MatrixXd& FUNEBSNW, const Eigen::VectorXd& FUNE, const Eigen::MatrixXd& FUNBW, const Eigen::MatrixXd& FUNBWE, const Eigen::MatrixXd& FUNBWSE, const Eigen::MatrixXd& FUNBWS, const double pStol);
+RcppExport SEXP _iCenJMH_getMC(SEXP betaSEXP, SEXP tauSEXP, SEXP gammaSEXP, SEXP alphaSEXP, SEXP H0SEXP, SEXP SigSEXP, SEXP ZSEXP, SEXP X1SEXP, SEXP WSEXP, SEXP YSEXP, SEXP X2SEXP, SEXP survtimeSEXP, SEXP statusSEXP, SEXP niSEXP, SEXP ntSEXP, SEXP PslSEXP, SEXP PslTSEXP, SEXP FUNENWSEXP, SEXP FUNEBNWSEXP, SEXP FUNEBSNWSEXP, SEXP FUNESEXP, SEXP FUNBWSEXP, SEXP FUNBWESEXP, SEXP FUNBWSESEXP, SEXP FUNBWSSEXP, SEXP pStolSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -339,7 +339,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type FUNBWE(FUNBWESEXP);
     Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type FUNBWSE(FUNBWSESEXP);
     Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type FUNBWS(FUNBWSSEXP);
-    rcpp_result_gen = Rcpp::wrap(getMC(beta, tau, gamma, alpha, H0, Sig, Z, X1, W, Y, X2, survtime, status, ni, nt, Psl, PslT, FUNENW, FUNEBNW, FUNEBSNW, FUNE, FUNBW, FUNBWE, FUNBWSE, FUNBWS));
+    Rcpp::traits::input_parameter< const double >::type pStol(pStolSEXP);
+    rcpp_result_gen = Rcpp::wrap(getMC(beta, tau, gamma, alpha, H0, Sig, Z, X1, W, Y, X2, survtime, status, ni, nt, Psl, PslT, FUNENW, FUNEBNW, FUNEBSNW, FUNE, FUNBW, FUNBWE, FUNBWSE, FUNBWS, pStol));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -363,7 +364,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_iCenJMH_getGradT", (DL_FUNC) &_iCenJMH_getGradT, 12},
     {"_iCenJMH_getGradY", (DL_FUNC) &_iCenJMH_getGradY, 15},
     {"_iCenJMH_getHazard", (DL_FUNC) &_iCenJMH_getHazard, 6},
-    {"_iCenJMH_getMC", (DL_FUNC) &_iCenJMH_getMC, 25},
+    {"_iCenJMH_getMC", (DL_FUNC) &_iCenJMH_getMC, 26},
     {NULL, NULL, 0}
 };
 

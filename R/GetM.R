@@ -1,5 +1,5 @@
 GetM <- function(GetEfun, beta, tau, gamma, alpha, Sig, Z, X1, W, Y, X2, 
-                 survtime, status, TID, YID, ni, nt, YS, subiCendata, phiname) {
+                 survtime, status, TID, YID, ni, nt, YS, subiCendata, phiname, pStol) {
   
   Psl <- GetEfun$Psl
   htheta <- GetEfun$AllFUN
@@ -63,7 +63,7 @@ GetM <- function(GetEfun, beta, tau, gamma, alpha, Sig, Z, X1, W, Y, X2,
     
     getMpara <- getMC(beta, tau, gamma, alpha, H0, Sig, Z, X1, W, Y, X2, 
                       survtime, status, ni, nt, Psl, PslT, FUNENW, FUNEBNW, FUNEBSNW,
-                      FUNE, FUNBW, FUNBWE, FUNBWSE, FUNBWS)
+                      FUNE, FUNBW, FUNBWE, FUNBWSE, FUNBWS, pStol)
     
     getMpara$phi <- phi
     

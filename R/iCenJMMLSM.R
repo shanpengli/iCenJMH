@@ -175,7 +175,7 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
                       S, iCen.ID, iCen.wID, pStol)
 
       GetMpara <- GetM(GetEfun, beta, tau, gamma, alpha, Sig, Z, X1, W, Y, X2, 
-                       survtime, status, TID, YID, ni, nt, YS, subiCendata, phiname)
+                       survtime, status, TID, YID, ni, nt, YS, subiCendata, phiname, pStol)
       
       beta <- GetMpara$beta
       tau <- GetMpara$tau

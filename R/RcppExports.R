@@ -73,7 +73,7 @@ getHazard <- function(CumuH0, survtime, status, H0, CUH0, HAZ0) {
     .Call(`_iCenJMH_getHazard`, CumuH0, survtime, status, H0, CUH0, HAZ0)
 }
 
-getMC <- function(beta, tau, gamma, alpha, H0, Sig, Z, X1, W, Y, X2, survtime, status, ni, nt, Psl, PslT, FUNENW, FUNEBNW, FUNEBSNW, FUNE, FUNBW, FUNBWE, FUNBWSE, FUNBWS) {
-    .Call(`_iCenJMH_getMC`, beta, tau, gamma, alpha, H0, Sig, Z, X1, W, Y, X2, survtime, status, ni, nt, Psl, PslT, FUNENW, FUNEBNW, FUNEBSNW, FUNE, FUNBW, FUNBWE, FUNBWSE, FUNBWS)
+getMC <- function(beta, tau, gamma, alpha, H0, Sig, Z, X1, W, Y, X2, survtime, status, ni, nt, Psl, PslT, FUNENW, FUNEBNW, FUNEBSNW, FUNE, FUNBW, FUNBWE, FUNBWSE, FUNBWS, pStol) {
+    .Call(`_iCenJMH_getMC`, beta, tau, gamma, alpha, H0, Sig, Z, X1, W, Y, X2, survtime, status, ni, nt, Psl, PslT, FUNENW, FUNEBNW, FUNEBSNW, FUNE, FUNBW, FUNBWE, FUNBWSE, FUNBWS, pStol)
 }
 
