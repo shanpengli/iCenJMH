@@ -320,7 +320,7 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
         mycall <- match.call()
         
         result <- list(beta = beta, tau = tau, gamma = gamma, alpha = alpha,
-                       H0 = H0, Sig = Sig, vcov = Cov, sebeta = sebeta, setau = setau,
+                       H0 = H0, Sig = Sig, vcov = Cov, phi = phi, sebeta = sebeta, setau = setau,
                        seSig = seSig, segamma = segamma, sealpha = sealpha, 
                        iter = iter, convergence = convergence,
                        quadpoint = quadpoint, Ydata, Tdata, PropComp, FunCall_long, 

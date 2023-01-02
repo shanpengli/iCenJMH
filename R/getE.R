@@ -62,6 +62,8 @@ GetE <- function(beta, tau, gamma, alpha, H0, Sig, phi, Z, X1, W, Y,
                   status, ni, nt, xsmatrix, wsmatrix, pSLR, Psl, FUNENW, FUNEBNW,
                   FUNEBSNW, FUNE, FUNBW, FUNBWE, FUNBWSE, FUNBWS, pStol)
   
+  print(ALLFUN)
+  
   res <- list(Psl = Psl, AllFUN = AllFUN)
   
   return(res)

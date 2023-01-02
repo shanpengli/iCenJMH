@@ -34,7 +34,7 @@ bootsfitRI <- function(i, seed = 99, n = 100, phi = 0.04,
                           ID = "ID", S = "Stime", weight = "Stime.w", weight.ID = "w.ID")
 
   a <- proc.time()
-  fit <- iCenJMMLSM(Ydata = Ydata, Tdata = Tdata,
+  fit <- try(iCenJMMLSM(Ydata = Ydata, Tdata = Tdata,
                         long.formula = Yij ~ X11 + X12,
                         surv.formula = Surv(Ei, status) ~ X21 + X22,
                         variance.formula = ~ X11 + X12,
@@ -44,14 +44,18 @@ bootsfitRI <- function(i, seed = 99, n = 100, phi = 0.04,
                         maxiter = maxiter, epsilon = 1e-04,
                         epsilonH0 = 1e-03,
                         quadpoint = quadpoint, print.para = TRUE,
-                        initial.para = TRUE)
+                        initial.para = TRUE), silent = TRUE)
   b <- proc.time()
   time <- (b - a)[3]
   
   coef <- vector()
   coefSE <- vector()
   count <- 1
-  if (is.null(fit$beta)) {
+  if ('try-error' %in% class(fit)) {
+    coef <- rep(NA, 20)
+    coefSE <- rep(NA, 18)
+    coef <- list(coef, coefSE)
+  } else if (is.null(fit$beta)) {
     coef <- rep(NA, 20)
     coefSE <- rep(NA, 18)
     coef <- list(coef, coefSE)
