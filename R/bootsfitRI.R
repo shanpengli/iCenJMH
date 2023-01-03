@@ -55,6 +55,7 @@ bootsfitRI <- function(i, seed = 99, n = 100, phi = 0.04,
     coef <- rep(NA, 20)
     coefSE <- rep(NA, 18)
     coef <- list(coef, coefSE)
+    names(coef) <- c("coef", "coefSE")
   } else if (is.null(fit$beta)) {
     coef <- rep(NA, 20)
     coefSE <- rep(NA, 18)
