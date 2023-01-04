@@ -62,6 +62,12 @@ GetE <- function(beta, tau, gamma, alpha, H0, Sig, phi, Z, X1, W, Y,
                   status, ni, nt, xsmatrix, wsmatrix, pSLR, Psl, FUNENW, FUNEBNW,
                   FUNEBSNW, FUNE, FUNBW, FUNBWE, FUNBWSE, FUNBWS, pStol)
   
+  if (AllFUN == 0) {
+    AllFUN <- list(FUNENW = FUNENW, FUNEBNW = FUNEBNW, FUNEBSNW = FUNEBSNW,
+                   FUNE = FUNE, FUNBW = FUNBW, FUNBWE = FUNBWE, FUNBWSE = FUNBWSE,
+                   FUNBWS = FUNBWS)
+  }
+  
   res <- list(Psl = Psl, AllFUN = AllFUN)
   
   return(res)

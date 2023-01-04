@@ -170,13 +170,13 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
       print(Sig)
       }
 
-      GetEfun <- GetE(beta, tau, gamma, alpha, H0, Sig, phi, Z, X1, W, Y,
-                      X2, survtime, status, TID, YID, ni, nt, YS, xsmatrix, wsmatrix,
-                      S, iCen.ID, iCen.wID, pStol)
+    GetEfun <- GetE(beta, tau, gamma, alpha, H0, Sig, phi, Z, X1, W, Y,
+                    X2, survtime, status, TID, YID, ni, nt, YS, xsmatrix, wsmatrix,
+                    S, iCen.ID, iCen.wID, pStol)
 
-      GetMpara <- GetM(GetEfun, beta, tau, gamma, alpha, Sig, Z, X1, W, Y, X2, 
-                       survtime, status, TID, YID, ni, nt, YS, subiCendata, phiname, pStol)
-      
+    GetMpara <- GetM(GetEfun, beta, tau, gamma, alpha, Sig, Z, X1, W, Y, X2, 
+                     survtime, status, TID, YID, ni, nt, YS, subiCendata, phiname, pStol)
+    
       beta <- GetMpara$beta
       tau <- GetMpara$tau
       Sig <- GetMpara$Sig

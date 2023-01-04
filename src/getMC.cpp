@@ -54,12 +54,11 @@ Rcpp::List getMC(Eigen::VectorXd & beta, Eigen::VectorXd & tau,
         for (i=0;i<ni(j);i++)
         {
           X1X1Ts += MultVVoutprod(X1.row(counti))/exp(MultVV(W.row(counti),tau));
-          X11s += (Y(counti)*FUNENW(j)*X1.row(counti)-
-            MultVV(Z.row(counti), FUNEBNW.row(j))*X1.row(counti))/exp(MultVV(W.row(counti),tau)); 
+          X11s += (Y(counti)*FUNENW(countt)*X1.row(counti)-
+            MultVV(Z.row(counti), FUNEBNW.row(countt))*X1.row(counti))/exp(MultVV(W.row(counti),tau)); 
           counti++;
         }
-        X1X1Ts *= Psl(countt, 2)*FUNENW(j);
-        X11s *= Psl(countt, 2);
+        X1X1Ts *= FUNENW(countt);
         X1X1T += X1X1Ts;
         X11 += X11s;
       }
@@ -83,64 +82,61 @@ Rcpp::List getMC(Eigen::VectorXd & beta, Eigen::VectorXd & tau,
   counti = 0;
   countt = 0;
   for (j=0;j<k;j++) {
-    
-    for(t=0;t<p1a;t++)   bbT(t,t) = FUNEBSNW(j,t);
-    if (p1a > 1) {
-      for(i=1;i<p1a;i++)
-      {
-        for(t=0;t<p1a-i;t++) {
-          bbT(t,i+t) = FUNEBSNW(j, p1a+t+(i-1)*(p1a-1));
-          bbT(i+t,t) = bbT(t,i+t);
-        }
-      }
-    }
 
     for (t=0;t<nt(j);t++) {
-      
+
       if (Psl(countt, 2) <= pStol) {
         counti += ni(j);
       } else {
+
+        for(u=0;u<p1a;u++)   bbT(u,u) = FUNEBSNW(countt,u);
+        if (p1a > 1) {
+          for(i=1;i<p1a;i++)
+          {
+            for(u=0;u<p1a-i;u++) {
+              bbT(u,i+u) = FUNEBSNW(countt, p1a+u+(i-1)*(p1a-1));
+              bbT(i+u,u) = bbT(countt,i+u);
+            }
+          }
+        }
+
         for (i=0;i<ni(j);i++)
         {
           epsilon = Y(counti) - MultVV(X1.row(counti), beta);
           bbT2 = MultVVoutprod(Z.row(counti))*bbT;
-          qq = pow(epsilon, 2)*FUNENW(j) - 2*epsilon*MultVV(Z.row(counti), FUNEBNW.row(j)) 
+          qq = pow(epsilon, 2)*FUNENW(countt) - 2*epsilon*MultVV(Z.row(counti), FUNEBNW.row(countt))
             + bbT2.trace();
           WWTs += qq*0.5*exp(-MultVV(W.row(counti),tau))*MultVVoutprod(W.row(counti));
-          W11s += 0.5*(exp(-MultVV(W.row(counti),tau))*qq-1)*W.row(counti); 
+          W11s += 0.5*(exp(-MultVV(W.row(counti),tau))*qq-Psl(countt, 2))*W.row(counti);
           counti++;
         }
-        WWTs *= Psl(countt, 2);
-        W11s *= Psl(countt, 2);
         WWT += WWTs;
         W11 += W11s;
       }
 
       WWTs = Eigen::MatrixXd::Zero(p1b, p1b);
       W11s = Eigen::VectorXd::Zero(p1b);
-      countt++; 
+      countt++;
     }
-    
+
   }
 
   tau+=WWT.inverse()*W11;
-  
+
   /* calculate Sig*/
   Sig = Eigen::MatrixXd::Zero(p1a+1, p1a+1);
-  
-  for (j=0;j<k;j++) {
-    
-    for(t=0;t<(p1a+1);t++) Sig(t,t)+=FUNBWS(j,t);
-    for(q=1;q<(p1a+1);q++)
-    {
-      for(t=0;t<(p1a+1-q);t++) {
-        Sig(t,q+t)+=FUNBWS(j, p1a+1+t+(q-1)*(p1a));
-        Sig(q+t,t)+=FUNBWS(j, p1a+1+t+(q-1)*(p1a));
-      }
+
+  for(t=0;t<(p1a+1);t++) Sig(t,t) = FUNBWS.col(t).sum();
+
+  for(q=1;q<(p1a+1);q++)
+  {
+    for(t=0;t<(p1a+1-q);t++) {
+      Sig(t,q+t) = FUNBWS.col(p1a+1+t+(q-1)*(p1a)).sum();
+      Sig(q+t,t) = Sig(t,q+t);
     }
   }
   Sig/=k;
-  
+
   /* calculate H0*/
   double dem=0;
   int risk1_index=a-1;
@@ -148,7 +144,7 @@ Rcpp::List getMC(Eigen::VectorXd & beta, Eigen::VectorXd & tau,
   for (j=0;j<ks;j++)
   {
 
-    dem+=FUNE(j)*exp(MultVV(X2.row(j), gamma))*PslT(j);
+    dem+=FUNE(j)*exp(MultVV(X2.row(j), gamma));
 
     if (status(j) == 1)
     {
@@ -177,7 +173,7 @@ Rcpp::List getMC(Eigen::VectorXd & beta, Eigen::VectorXd & tau,
         for (j=j+1;j<ks;j++)
         {
 
-          dem+=FUNE(j)*exp(MultVV(X2.row(j), gamma))*PslT(j);
+          dem+=FUNE(j)*exp(MultVV(X2.row(j), gamma));
 
           if (j == ks-1)
           {
@@ -228,7 +224,7 @@ Rcpp::List getMC(Eigen::VectorXd & beta, Eigen::VectorXd & tau,
   for (j=0;j<ks;j++)
   {
     XX = MultVVoutprod(X2.row(j));
-    scalef = FUNE(j)*exp(MultVV(X2.row(j), gamma))*PslT(j);
+    scalef = FUNE(j)*exp(MultVV(X2.row(j), gamma));
     XX*=scalef;
     SXX+=XX;
     X22=X2.row(j);
@@ -244,7 +240,7 @@ Rcpp::List getMC(Eigen::VectorXd & beta, Eigen::VectorXd & tau,
         SXX_new+=SXX2;
         SX2=SX*scalefH0;
         SX_new+=SX2;
-        risk1_index--; 
+        risk1_index--;
       }
       else if (survtime(j+1) != survtime(j))
       {
@@ -260,7 +256,7 @@ Rcpp::List getMC(Eigen::VectorXd & beta, Eigen::VectorXd & tau,
         for (j=j+1;j<ks;j++)
         {
           XX = MultVVoutprod(X2.row(j));
-          scalef = FUNE(j)*exp(MultVV(X2.row(j), gamma))*PslT(j);
+          scalef = FUNE(j)*exp(MultVV(X2.row(j), gamma));
           XX*=scalef;
           SXX+=XX;
           X22=X2.row(j);
@@ -298,7 +294,7 @@ Rcpp::List getMC(Eigen::VectorXd & beta, Eigen::VectorXd & tau,
   {
     if (status(j) == 1) SX_inter+=PslT(j)*X2.row(j);
   }
-  
+
   gamma+=SXX_new.inverse()*(SX_inter - SX_new);
 
   /*  calculate alpha*/
@@ -329,9 +325,9 @@ Rcpp::List getMC(Eigen::VectorXd & beta, Eigen::VectorXd & tau,
 
     N = FUNBWE.row(j);
 
-    bwT*=exp(MultVV(X2.row(j), gamma))*PslT(j);
+    bwT*=exp(MultVV(X2.row(j), gamma));
     TD+=bwT;
-    N*=exp(MultVV(X2.row(j), gamma))*PslT(j);
+    N*=exp(MultVV(X2.row(j), gamma));
     TN+=N;
 
     if (status(j) == 1)
@@ -357,9 +353,9 @@ Rcpp::List getMC(Eigen::VectorXd & beta, Eigen::VectorXd & tau,
       {
         for (j=j+1;j<ks;j++)
         {
-          
+
           for(t=0;t<(p1a+1);t++) bwT(t,t) = FUNBWSE(j,t);
-          
+
           for(i=1;i<(p1a+1);i++)
           {
             for(t=0;t<(p1a+1-i);t++) {
@@ -367,12 +363,12 @@ Rcpp::List getMC(Eigen::VectorXd & beta, Eigen::VectorXd & tau,
               bwT(i+t,t) = bwT(t,i+t);
             }
           }
-          
+
           N = FUNBWE.row(j);
-          
-          bwT*=exp(MultVV(X2.row(j), gamma))*PslT(j);
+
+          bwT*=exp(MultVV(X2.row(j), gamma));
           TD+=bwT;
-          N*=exp(MultVV(X2.row(j), gamma))*PslT(j);
+          N*=exp(MultVV(X2.row(j), gamma));
           TN+=N;
 
           if (j == ks-1)
@@ -406,7 +402,7 @@ Rcpp::List getMC(Eigen::VectorXd & beta, Eigen::VectorXd & tau,
   {
     if(status(j)==1)
     {
-      N = PslT(j)*FUNBW.row(j);
+      N = FUNBW.row(j);
       TN+=N;
     } else continue;
   }

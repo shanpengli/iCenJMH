@@ -78,8 +78,8 @@ Eigen::MatrixXd getGradT(const Eigen::VectorXd & gamma, const Eigen::VectorXd & 
       for (q=j;q<ks;q++)
       {
         
-        temp+=exp(MultVV(X2.row(q), gamma))*FUNE(q)*PslT(q);
-        SX+=exp(MultVV(X2.row(q), gamma))*FUNE(q)*PslT(q)*X2.row(q);
+        temp+=exp(MultVV(X2.row(q), gamma))*FUNE(q);
+        SX+=exp(MultVV(X2.row(q), gamma))*FUNE(q)*X2.row(q);
         
         if (status(q) == 1)
         {
@@ -109,8 +109,8 @@ Eigen::MatrixXd getGradT(const Eigen::VectorXd & gamma, const Eigen::VectorXd & 
           {
             for (q=q+1;q<ks;q++)
             {
-              temp+=exp(MultVV(X2.row(q), gamma))*FUNE(q)*PslT(q);
-              SX+=exp(MultVV(X2.row(q), gamma))*FUNE(q)*PslT(q)*X2.row(q);
+              temp+=exp(MultVV(X2.row(q), gamma))*FUNE(q);
+              SX+=exp(MultVV(X2.row(q), gamma))*FUNE(q)*X2.row(q);
               
               if (q == ks-1)
               {
@@ -200,14 +200,14 @@ Eigen::MatrixXd getGradT(const Eigen::VectorXd & gamma, const Eigen::VectorXd & 
     {
       if (status(j) == 1)
       {
-        X = X2.row(j);
-        X -= SXX11.col(a-1-risk1_index_tttemp);
+        X = PslT(j)*X2.row(j);
+        X -= PslT(j)*SXX11.col(a-1-risk1_index_tttemp);
         X += SRX;
-        for (q=0;q<p2;q++) S(j,q) = PslT(j)*X(q);
+        for (q=0;q<p2;q++) S(j,q) = X(q);
       }
       else
       {
-        for (q=0;q<p2;q++) S(j,q) = PslT(j)*SRX(q);
+        for (q=0;q<p2;q++) S(j,q) = SRX(q);
       }
     }
     else
@@ -217,20 +217,20 @@ Eigen::MatrixXd getGradT(const Eigen::VectorXd & gamma, const Eigen::VectorXd & 
       {
         if (status(j) == 1)
         {
-          X = X2.row(j);
-          X -= SXX11.col(a-1-risk1_index_tttemp);
+          X = PslT(j)*X2.row(j);
+          X -= PslT(j)*SXX11.col(a-1-risk1_index_tttemp);
           X += SRX;
-          for (q=0;q<p2;q++) S(j,q) = PslT(j)*X(q);
+          for (q=0;q<p2;q++) S(j,q) = X(q);
         }
         else
         {
-          for (q=0;q<p2;q++) S(j,q) = PslT(j)*SRX(q);
+          for (q=0;q<p2;q++) S(j,q) = SRX(q);
         }
       }
       else
       {
         risk1_index_tttemp=0;
-        for (q=0;q<p2;q++) S(j,q) = PslT(j)*SRX(q);
+        for (q=0;q<p2;q++) S(j,q) = SRX(q);
       }
     }
     
@@ -245,8 +245,8 @@ Eigen::MatrixXd getGradT(const Eigen::VectorXd & gamma, const Eigen::VectorXd & 
       risk1_index=risk1_index_vtemp;
       for (q=j;q<ks;q++)
       {
-        temp += exp(MultVV(X2.row(q), gamma))*PslT(q)*FUNE(q);
-        TN += PslT(q)*exp(MultVV(X2.row(q), gamma))*FUNBWE.row(q);
+        temp += exp(MultVV(X2.row(q), gamma))*FUNE(q);
+        TN += exp(MultVV(X2.row(q), gamma))*FUNBWE.row(q);
         if (status(q) == 1)
         {
           if (q == ks-1)
@@ -275,8 +275,8 @@ Eigen::MatrixXd getGradT(const Eigen::VectorXd & gamma, const Eigen::VectorXd & 
           {
             for (q=q+1;q<ks;q++)
             {
-              temp += exp(MultVV(X2.row(q), gamma))*PslT(q)*FUNE(q);
-              TN += PslT(q)*exp(MultVV(X2.row(q), gamma))*FUNBWE.row(q);
+              temp += exp(MultVV(X2.row(q), gamma))*FUNE(q);
+              TN += exp(MultVV(X2.row(q), gamma))*FUNBWE.row(q);
               if (q == ks-1)
               {
                 if (temp != 0) {
@@ -367,13 +367,13 @@ Eigen::MatrixXd getGradT(const Eigen::VectorXd & gamma, const Eigen::VectorXd & 
     {
       if (status(j) == 1)
       {
-        for (q=0;q<p1a;q++) TN(q) = FUNBW(j,q) - TNN11(q, a-1-risk1_index_vtttemp);
+        for (q=0;q<p1a;q++) TN(q) = FUNBW(j,q) - PslT(j)*TNN11(q, a-1-risk1_index_vtttemp);
         TN += TRN;
-        for (q=0;q<p1a;q++) S(j,p2+q) = PslT(j)*TN(q);
+        for (q=0;q<p1a;q++) S(j,p2+q) = TN(q);
       }
       else
       {
-        for (q=0;q<p1a;q++) S(j,p2+q) = PslT(j)*TRN(q);
+        for (q=0;q<p1a;q++) S(j,p2+q) = TRN(q);
       }
     } else
     {
@@ -382,19 +382,19 @@ Eigen::MatrixXd getGradT(const Eigen::VectorXd & gamma, const Eigen::VectorXd & 
       {
         if (status(j) == 1)
         {
-          for (q=0;q<p1a;q++) TN(q) = FUNBW(j,q) - TNN11(q, a-1-risk1_index_vtttemp);
+          for (q=0;q<p1a;q++) TN(q) = FUNBW(j,q) - PslT(j)*TNN11(q, a-1-risk1_index_vtttemp);
           TN += TRN;
-          for (q=0;q<p1a;q++) S(j,p2+q) = PslT(j)*TN(q);
+          for (q=0;q<p1a;q++) S(j,p2+q) = TN(q);
         }
         else
         {
-          for (q=0;q<p1a;q++) S(j,p2+q) = PslT(j)*TRN(q);
+          for (q=0;q<p1a;q++) S(j,p2+q) = TRN(q);
         }
       }
       else
       {
         risk1_index_vtttemp=0;
-        for (q=0;q<p1a;q++) S(j,p2+q) = PslT(j)*TRN(q);
+        for (q=0;q<p1a;q++) S(j,p2+q) = TRN(q);
       }
     }
     
@@ -449,17 +449,19 @@ Eigen::MatrixXd getGradY(Eigen::VectorXd & beta, Eigen::VectorXd & tau,
   
   for (j=0;j<k;j++) {
     /* calculate score for beta and tau*/
-    for(u=0;u<p1a;u++)   bbT(u,u) = FUNEBSNW(j,u);
-    if (p1a > 1) {
-      for(i=1;i<p1a;i++)
-      {
-        for(u=0;u<p1a-i;u++) {
-          bbT(u,i+u) = FUNEBSNW(j, p1a+u+(i-1)*(p1a-1));
-          bbT(i+u,u) = bbT(u,i+u);
+    for (t=0;t<nt(j);t++) {
+      
+      for(u=0;u<p1a;u++)   bbT(u,u) = FUNEBSNW(countt,u);
+      if (p1a > 1) {
+        for(i=1;i<p1a;i++)
+        {
+          for(u=0;u<p1a-i;u++) {
+            bbT(u,i+u) = FUNEBSNW(countt, p1a+u+(i-1)*(p1a-1));
+            bbT(i+u,u) = bbT(u,i+u);
+          }
         }
       }
-    }
-    for (t=0;t<nt(j);t++) {
+      
       SZ = Eigen::VectorXd::Zero(p1);
       SZ1 = Eigen::VectorXd::Zero(p1);
       
@@ -470,33 +472,34 @@ Eigen::MatrixXd getGradY(Eigen::VectorXd & beta, Eigen::VectorXd & tau,
       } else {
         for (i=0;i<ni(j);i++) {
           SZ1 += (Y(counti) - MultVV(X1.row(counti), beta))*
-            exp(-MultVV(W.row(counti),tau))*FUNENW(j)*X1.row(counti);
+            exp(-MultVV(W.row(counti),tau))*FUNENW(countt)*X1.row(counti);
           SZ += exp(-MultVV(W.row(counti),tau))*
-            MultVV(Z.row(counti), FUNEBNW.row(j))*X1.row(counti);
+            MultVV(Z.row(counti), FUNEBNW.row(countt))*X1.row(counti);
           
           epsilon = Y(counti) - MultVV(X1.row(counti), beta);
           bbT2 = MultVVoutprod(Z.row(counti))*bbT;
-          qq = pow(epsilon, 2)*FUNENW(j) - 2*epsilon*MultVV(Z.row(counti), FUNEBNW.row(j)) + bbT2.trace();
-          SZtau += 0.5*(exp(-MultVV(W.row(counti),tau))*qq-1)*W.row(counti);
+          qq = pow(epsilon, 2)*FUNENW(countt) - 2*epsilon*MultVV(Z.row(counti), FUNEBNW.row(countt)) + bbT2.trace();
+          SZtau += 0.5*(exp(-MultVV(W.row(counti),tau))*qq-Psl(countt, 2))*W.row(counti);
           counti++;
         }
-        for (i=0;i<p1;i++) S(j,i) += Psl(countt, 2)*(SZ1(i) - SZ(i));
-        for (i=0;i<p1b;i++) S(j,p1+i) += Psl(countt, 2)*SZtau(i);
+        for (i=0;i<p1;i++) S(j,i) += SZ1(i) - SZ(i);
+        for (i=0;i<p1b;i++) S(j,p1+i) += SZtau(i);
+        
+        /*calculate score for Sig*/
+        for(u=0;u<(p1a+1);u++) bsw(u,u) += FUNBWS(countt,u);
+        for(i=1;i<(p1a+1);i++)
+        {
+          for(u=0;u<(p1a+1-i);u++) {
+            bsw(u,i+u) += FUNBWS(countt,p1a+1+u+(i-1)*(p1a-1));
+            bsw(i+u,u) = bsw(u,i+u);
+          }
+        }
+        
         countt++; 
       }
       
     }
-
-    /*calculate score for Sig*/
     
-    for(u=0;u<(p1a+1);u++) bsw(u,u) = FUNBWS(j,u);
-    for(i=1;i<(p1a+1);i++)
-    {
-      for(u=0;u<(p1a+1-i);u++) {
-        bsw(u,i+u) = FUNBWS(j,p1a+1+u+(i-1)*(p1a-1));
-        bsw(i+u,u) = bsw(u,i+u);
-      }
-    }
     bsw2 = Sig.inverse()*bsw*Sig.inverse() - Sig.inverse();
     
     for (u=0;u<(p1a+1);u++) S(j, p1+p1b+u) = 0.5*bsw2(u,u);
@@ -506,7 +509,10 @@ Eigen::MatrixXd getGradY(Eigen::VectorXd & beta, Eigen::VectorXd & tau,
       for(u=0;u<(p1a+1-q);u++) S(j, p1+p1b+p1a+1+u+(q-1)*(p1a)) = bsw2(u,q+u);
     }
     
+    bsw = Eigen::MatrixXd::Zero(p1a+1,p1a+1);
+    
   }
+  
   
   
   return S;
