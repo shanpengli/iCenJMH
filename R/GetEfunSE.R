@@ -45,10 +45,6 @@ GetEfunSE <- function(GetEfun, Z, TID, YID, ni, nt, YS, subiCendata) {
     w.ID <- colnames(YS)[2]
     Psl <- as.data.frame(Psl)
     subTdata <- dplyr::left_join(TID, Psl, by = IDwID)
-    subTdata <- cbind(subTdata, survtime, status)
-    subTdata <- subTdata[, c(ID, "status", "psl", "survtime")]
-    colnames(subTdata)[4] <- "T.aft.S"
-    H0 <- getBH(subTdata)
     Psl <- as.matrix(Psl)
     PslT <- as.vector(subTdata$psl)
     
