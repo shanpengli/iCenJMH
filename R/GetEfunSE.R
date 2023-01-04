@@ -41,9 +41,10 @@ GetEfunSE <- function(GetEfun, Z, TID, YID, ni, nt, YS, subiCendata) {
     FUNBWSE <- as.matrix(FUNBWSE[, -c(1:2)])
     
     ## update H0 jump sizes
+    ID <- colnames(YS)[1]
     w.ID <- colnames(YS)[2]
     Psl <- as.data.frame(Psl)
-    subTdata <- dplyr::left_join(TID, Psl, by = c(ID, w.ID))
+    subTdata <- dplyr::left_join(TID, Psl, by = IDwID)
     subTdata <- cbind(subTdata, survtime, status)
     subTdata <- subTdata[, c(ID, "status", "psl", "survtime")]
     colnames(subTdata)[4] <- "T.aft.S"
