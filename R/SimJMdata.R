@@ -16,7 +16,7 @@ SimJMdata <- function(seed = 99, n = 100, phi = 0.04,
   set.seed(seed = seed)
   ### generate interval censored event time for S_i
   ## 1. generate actual event time S_i 
-  Si <- rexp(n, rate = phi)
+  Si <- round(rexp(n, rate = phi), 1) + 0.1
   ## 2. generate multiple 20 inspection times C_ij
   Ci <- matrix(0, nrow = n, ncol = nc)
   Ci[, 1] <- 0
@@ -32,8 +32,8 @@ SimJMdata <- function(seed = 99, n = 100, phi = 0.04,
   for (i in 1:nrow(Ci)) {
     for (j in 1:(ncol(Ci)-1)) {
       if (Ci[i, j] < Si[i] && Si[i] <= Ci[i, j+1]) {
-        Li[i] <- Ci[i, j]
-        Ri[i] <- Ci[i, j+1]
+        Li[i] <- round(Ci[i, j], 1)
+        Ri[i] <- round(Ci[i, j+1], 1)
       } else next
     }
   }
@@ -101,8 +101,13 @@ SimJMdata <- function(seed = 99, n = 100, phi = 0.04,
     sd <- sqrt(exp(tau[1] + tau[2]*Xlong[i, 1] + tau[3]*ti1 + 
                    tau[4]*Xlong[i, 2] + tau[5]*Xlong[i, 3] + bwi[i, 2]))
     suby[1, 2] <- beta[1] + beta[2]*Xlong[i, 1] + beta[3]*ti1 + 
-      beta[4]*Xlong[i, 2] + beta[5]*Xlong[i, 3] + bwi[i, 1] + 
-      rnorm(1, mean = 0, sd = sd)
+      beta[4]*Xlong[i, 2] + beta[5]*Xlong[i, 3] + bwi[i, 1]
+    epsilon <- rnorm(1, mean = 0, sd = sd)
+    while (epsilon > 100) {
+      epsilon <- rnorm(1, mean = 0, sd = sd)
+    }
+    suby[1, 2] <- suby[1, 2] + epsilon
+      
     suby[1, 3] <- Sdata[i, 3]
     if (ni == 0) {
       colnames(suby) <- c("ID", "Yij", "Oij", "tij")
@@ -113,8 +118,12 @@ SimJMdata <- function(seed = 99, n = 100, phi = 0.04,
         sd <- sqrt(exp(tau[1] + tau[2]*Xlong[i, 1] + tau[3]*tij + 
                          tau[4]*Xlong[i, 2] + tau[5]*Xlong[i, 3] + bwi[i, 2]))
         suby[j+1, 2] <- beta[1] + beta[2]*Xlong[i, 1] + beta[3]*tij + 
-          beta[4]*Xlong[i, 2] + beta[5]*Xlong[i, 3] + bwi[i, 1] + 
-          rnorm(1, mean = 0, sd = sd)
+          beta[4]*Xlong[i, 2] + beta[5]*Xlong[i, 3] + bwi[i, 1]
+        epsilon <- rnorm(1, mean = 0, sd = sd)
+        while (epsilon > 100) {
+          epsilon <- rnorm(1, mean = 0, sd = sd)
+        }
+        suby[j+1, 2] <- suby[j+1, 2] + epsilon
         suby[j+1, 3] <- Sdata[i, 3] + j*increment
       }
       colnames(suby) <- c("ID", "Yij", "Oij", "tij")
