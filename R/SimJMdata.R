@@ -103,7 +103,7 @@ SimJMdata <- function(seed = 99, n = 100, phi = 0.04,
     suby[1, 2] <- beta[1] + beta[2]*Xlong[i, 1] + beta[3]*ti1 + 
       beta[4]*Xlong[i, 2] + beta[5]*Xlong[i, 3] + bwi[i, 1]
     epsilon <- rnorm(1, mean = 0, sd = sd)
-    while (epsilon > 100) {
+    while (abs(epsilon) > 100) {
       epsilon <- rnorm(1, mean = 0, sd = sd)
     }
     suby[1, 2] <- suby[1, 2] + epsilon
@@ -120,7 +120,7 @@ SimJMdata <- function(seed = 99, n = 100, phi = 0.04,
         suby[j+1, 2] <- beta[1] + beta[2]*Xlong[i, 1] + beta[3]*tij + 
           beta[4]*Xlong[i, 2] + beta[5]*Xlong[i, 3] + bwi[i, 1]
         epsilon <- rnorm(1, mean = 0, sd = sd)
-        while (epsilon > 100) {
+        while (abs(epsilon) > 100) {
           epsilon <- rnorm(1, mean = 0, sd = sd)
         }
         suby[j+1, 2] <- suby[j+1, 2] + epsilon
