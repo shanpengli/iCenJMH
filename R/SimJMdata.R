@@ -15,8 +15,14 @@ SimJMdata <- function(seed = 99, n = 100, phi = 0.04,
   
   set.seed(seed = seed)
   ### generate interval censored event time for S_i
-  ## 1. generate actual event time S_i 
-  Si <- round(rexp(n, rate = phi), 1) + 0.1
+  ## 1. generate actual event time S_i
+  Si <- rep(0, n)
+  for (i in 1:n) {
+    Si[i] <- round(rexp(1, rate = phi), 1) + 0.1
+    while (Si[i] > 35) {
+      Si[i] <- round(rexp(1, rate = phi), 1) + 0.1
+    }
+  }
   ## 2. generate multiple 20 inspection times C_ij
   Ci <- matrix(0, nrow = n, ncol = nc)
   Ci[, 1] <- 0
