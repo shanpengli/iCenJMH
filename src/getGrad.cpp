@@ -451,17 +451,6 @@ Eigen::MatrixXd getGradY(Eigen::VectorXd & beta, Eigen::VectorXd & tau,
     /* calculate score for beta and tau*/
     for (t=0;t<nt(j);t++) {
       
-      for(u=0;u<p1a;u++)   bbT(u,u) = FUNEBSNW(countt,u);
-      if (p1a > 1) {
-        for(i=1;i<p1a;i++)
-        {
-          for(u=0;u<p1a-i;u++) {
-            bbT(u,i+u) = FUNEBSNW(countt, p1a+u+(i-1)*(p1a-1));
-            bbT(i+u,u) = bbT(u,i+u);
-          }
-        }
-      }
-      
       SZ = Eigen::VectorXd::Zero(p1);
       SZ1 = Eigen::VectorXd::Zero(p1);
       
@@ -470,6 +459,16 @@ Eigen::MatrixXd getGradY(Eigen::VectorXd & beta, Eigen::VectorXd & tau,
         counti += ni(j);
         countt++;
       } else {
+        for(u=0;u<p1a;u++)   bbT(u,u) = FUNEBSNW(countt,u);
+        if (p1a > 1) {
+          for(i=1;i<p1a;i++)
+          {
+            for(u=0;u<p1a-i;u++) {
+              bbT(u,i+u) = FUNEBSNW(countt, p1a+u+(i-1)*(p1a-1));
+              bbT(i+u,u) = bbT(u,i+u);
+            }
+          }
+        }
         for (i=0;i<ni(j);i++) {
           SZ1 += (Y(counti) - MultVV(X1.row(counti), beta))*
             exp(-MultVV(W.row(counti),tau))*FUNENW(countt)*X1.row(counti);
