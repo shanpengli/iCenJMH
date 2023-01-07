@@ -489,7 +489,7 @@ Eigen::MatrixXd getGradY(Eigen::VectorXd & beta, Eigen::VectorXd & tau,
         for(i=1;i<(p1a+1);i++)
         {
           for(u=0;u<(p1a+1-i);u++) {
-            bsw(u,i+u) += FUNBWS(countt,p1a+1+u+(i-1)*(p1a-1));
+            bsw(u,i+u) += FUNBWS(countt,p1a+1+u+(i-1)*p1a);
             bsw(i+u,u) = bsw(u,i+u);
           }
         }

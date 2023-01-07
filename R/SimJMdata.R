@@ -16,19 +16,20 @@ SimJMdata <- function(seed = 99, n = 100, phi = 0.04,
   set.seed(seed = seed)
   ### generate interval censored event time for S_i
   ## 1. generate actual event time S_i
-  Si <- rep(0, n)
-  for (i in 1:n) {
-    Si[i] <- round(rexp(1, rate = phi), 1) + 0.1
-    while (Si[i] > 35) {
-      Si[i] <- round(rexp(1, rate = phi), 1) + 0.1
-    }
-  }
+  # Si <- rep(0, n)
+  # for (i in 1:n) {
+  #   Si[i] <- round(rexp(1, rate = phi), 1) + 0.1
+  #   while (Si[i] > 20) {
+  #     Si[i] <- round(rexp(1, rate = phi), 1) + 0.1
+  #   }
+  # }
+  Si <- round(runif(n, 2, 10), 1)
   ## 2. generate multiple 20 inspection times C_ij
   Ci <- matrix(0, nrow = n, ncol = nc)
   Ci[, 1] <- 0
   for (i in 1:nrow(Ci)) {
     for (j in 2:ncol(Ci)) {
-      Ci[i, j] <- Ci[i, j-1] + runif(1, min = Cmin, max = Cmax)
+      Ci[i, j] <- round(Ci[i, j-1] + runif(1, min = Cmin, max = Cmax), 1)
     }
   }
   
@@ -109,7 +110,7 @@ SimJMdata <- function(seed = 99, n = 100, phi = 0.04,
     suby[1, 2] <- beta[1] + beta[2]*Xlong[i, 1] + beta[3]*ti1 + 
       beta[4]*Xlong[i, 2] + beta[5]*Xlong[i, 3] + bwi[i, 1]
     epsilon <- rnorm(1, mean = 0, sd = sd)
-    while (abs(epsilon) > 100) {
+    while (abs(epsilon) > 50) {
       epsilon <- rnorm(1, mean = 0, sd = sd)
     }
     suby[1, 2] <- suby[1, 2] + epsilon
@@ -126,7 +127,7 @@ SimJMdata <- function(seed = 99, n = 100, phi = 0.04,
         suby[j+1, 2] <- beta[1] + beta[2]*Xlong[i, 1] + beta[3]*tij + 
           beta[4]*Xlong[i, 2] + beta[5]*Xlong[i, 3] + bwi[i, 1]
         epsilon <- rnorm(1, mean = 0, sd = sd)
-        while (abs(epsilon) > 100) {
+        while (abs(epsilon) > 50) {
           epsilon <- rnorm(1, mean = 0, sd = sd)
         }
         suby[j+1, 2] <- suby[j+1, 2] + epsilon
