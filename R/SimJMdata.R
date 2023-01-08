@@ -3,7 +3,7 @@
 
 SimJMdata <- function(seed = 99, n = 100, phi = 0.04,
                       nc = 100,
-                      covbw = matrix(c(0.5, 0.25, 0.25, 0.5), nrow = 2, ncol = 2),
+                      covbw = matrix(c(1, 0.1, 0.1, 0.5), nrow = 2, ncol = 2),
                       lambda = 0.3, lambdaC = 0.05,
                       Cmin = 1,
                       Cmax = 5,

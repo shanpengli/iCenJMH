@@ -72,7 +72,7 @@ Getinit <- function(Tdata = Tdata, Ydata = Ydata, long.formula = long.formula,
     tau = c(1, 0.05, 0.2, 0.1, -0.2)
     gamma = c(-0.05, 0.2, -0.1)
     alpha = c(0.5, -0.5)
-    Sig = matrix(c(0.5, 0.25, 0.25, 0.5), nrow = 2, ncol = 2)
+    Sig = matrix(c(1, 0.1, 0.1, 0.5), nrow = 2, ncol = 2)
   }
   
   fixed.para <- list(beta = beta, tau = tau, gamma = gamma, alpha = alpha, Sig = Sig)
