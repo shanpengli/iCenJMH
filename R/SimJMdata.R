@@ -23,7 +23,7 @@ SimJMdata <- function(seed = 99, n = 100, phi = 0.04,
   #     Si[i] <- round(rexp(1, rate = phi), 1) + 0.1
   #   }
   # }
-  Si <- round(runif(n, 2, 10), 1)
+  Si <- round(runif(n, 0.1, 5), 1)
   ## 2. generate multiple 20 inspection times C_ij
   Ci <- matrix(0, nrow = n, ncol = nc)
   Ci[, 1] <- 0
