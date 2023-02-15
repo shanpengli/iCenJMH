@@ -64,10 +64,10 @@ SimJMdata <- function(seed = 99, n = 100, phi = 0.04,
   for (i in 1:n) {
     Ti[i] <- 0
     Ci[i] <- 0
-    while (Ti[i] <= (Sdata$Ri[i] - Sdata$Si[i])) {
+    while (Ti[i] <= (Sdata$Ri[i] - Sdata$Si[i]) || Ti[i] >= 30) {
       Ti[i] <- rexp(1, rate = lambda*exp(Xsurv[i, ]%*%gamma + bwi[i, ]%*%alpha))
     }
-    while (Ci[i] <= (Sdata$Ri[i] - Sdata$Si[i])) {
+    while (Ci[i] <= (Sdata$Ri[i] - Sdata$Si[i]) || Ci[i] >= 30) {
       Ci[i] <- rexp(1, rate = lambdaC)
     }
   }
