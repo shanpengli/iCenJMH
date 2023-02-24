@@ -1,6 +1,6 @@
-GetGradS <- function(Psl, phi, iCen.info, iCen.data, nt, pStol) {
+GetGradS <- function(Psl, phi, iCen.info, nt, pStol) {
   
-  Psl2 <- cbind(Psl, iCen.data[, iCen.info$S])
+  Psl2 <- cbind(Psl, iCen.info$iCen.data[, iCen.info$S])
   colnames(Psl2)[4] <- colnames(phi)[1]
   Psl2 <- as.data.frame(Psl2)
   Psl2 <- dplyr::left_join(Psl2, phi[, c(1, 3)], by = colnames(phi)[1])

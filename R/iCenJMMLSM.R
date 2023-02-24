@@ -274,7 +274,7 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
         GradT <- aggregate(GradT[, -c(1:2)], by=list(GradT[, 1]), FUN = sum)
         colnames(GradT)[1] <- iCen.info$ID
         
-        GradS <- GetGradS(Psl, phi, iCen.info, iCen.data, nt, pStol)
+        GradS <- GetGradS(Psl, phi, iCen.info, nt, pStol)
         colnames(GradS)[1] <- iCen.info$ID
         GradS <- as.data.frame(GradS)
         zeroindex <- which(abs(colSums(GradS[, -1])) <= pStol) + 1
