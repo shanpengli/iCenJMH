@@ -52,7 +52,8 @@ int getEC(const Eigen::Map<Eigen::VectorXd> & beta, const Eigen::Map<Eigen::Vect
     for (t=0;t<nt(j);t++)
     {
       dem=0;
-      if (pSLR(countt, 3) <= pStol) {
+
+      if (pSLR(countt, 3) <= pStol || isnan(pSLR(countt, 3))) {
         Psl(countt, 2) = dem;
         counti+=ni(j);
         countt++;
@@ -134,7 +135,7 @@ int getEC(const Eigen::Map<Eigen::VectorXd> & beta, const Eigen::Map<Eigen::Vect
     }
     for (t=0;t<nt(j);t++)
     {
-      Psl(countt, 2) /= demt;
+      Psl(countt, 2) = exp(log(Psl(countt, 2)) - log(demt));
       FUNENW(countt) /= demt;
       FUNEBSNW.row(countt) /= demt;
       FUNE(countt) /= demt;

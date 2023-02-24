@@ -274,7 +274,14 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
         GradT <- aggregate(GradT[, -c(1:2)], by=list(GradT[, 1]), FUN = sum)
         colnames(GradT)[1] <- iCen.info$ID
         
+        GradS <- GetGradS(Psl, phi, iCen.info, iCen.data, nt, pStol)
+        colnames(GradS)[1] <- iCen.info$ID
+        GradS <- as.data.frame(GradS)
+        zeroindex <- which(abs(colSums(GradS[, -1])) <= pStol) + 1
+        GradS <- GradS[, -zeroindex]
+        
         Grad <- dplyr::left_join(GradY, GradT, by = iCen.info$ID)
+        Grad <- dplyr::left_join(Grad, GradS, by = iCen.info$ID)
         Grad <- Grad[, -1]
         Grad <- as.matrix(Grad)
         Cov <- GetCov(Grad) 

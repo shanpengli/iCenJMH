@@ -292,6 +292,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// getGradS
+int getGradS(Eigen::Map<Eigen::MatrixXd>& Psl2, const Eigen::Map<Eigen::VectorXd>& nt, const double pStol, Eigen::Map<Eigen::MatrixXd>& GradS);
+RcppExport SEXP _iCenJMH_getGradS(SEXP Psl2SEXP, SEXP ntSEXP, SEXP pStolSEXP, SEXP GradSSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd>& >::type Psl2(Psl2SEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::VectorXd>& >::type nt(ntSEXP);
+    Rcpp::traits::input_parameter< const double >::type pStol(pStolSEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd>& >::type GradS(GradSSEXP);
+    rcpp_result_gen = Rcpp::wrap(getGradS(Psl2, nt, pStol, GradS));
+    return rcpp_result_gen;
+END_RCPP
+}
 // getHazard
 int getHazard(const Eigen::Map<Eigen::VectorXd>& CumuH0, const Eigen::Map<Eigen::VectorXd>& survtime, const Eigen::Map<Eigen::VectorXd>& status, const Eigen::Map<Eigen::MatrixXd>& H0, Eigen::Map<Eigen::VectorXd>& CUH0, Eigen::Map<Eigen::VectorXd>& HAZ0);
 RcppExport SEXP _iCenJMH_getHazard(SEXP CumuH0SEXP, SEXP survtimeSEXP, SEXP statusSEXP, SEXP H0SEXP, SEXP CUH0SEXP, SEXP HAZ0SEXP) {
@@ -363,6 +377,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_iCenJMH_getEC", (DL_FUNC) &_iCenJMH_getEC, 28},
     {"_iCenJMH_getGradT", (DL_FUNC) &_iCenJMH_getGradT, 12},
     {"_iCenJMH_getGradY", (DL_FUNC) &_iCenJMH_getGradY, 15},
+    {"_iCenJMH_getGradS", (DL_FUNC) &_iCenJMH_getGradS, 4},
     {"_iCenJMH_getHazard", (DL_FUNC) &_iCenJMH_getHazard, 6},
     {"_iCenJMH_getMC", (DL_FUNC) &_iCenJMH_getMC, 26},
     {NULL, NULL, 0}

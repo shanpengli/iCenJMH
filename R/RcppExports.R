@@ -69,6 +69,10 @@ getGradY <- function(beta, tau, Sig, Z, X1, W, Y, ni, nt, Psl, FUNENW, FUNEBNW, 
     .Call(`_iCenJMH_getGradY`, beta, tau, Sig, Z, X1, W, Y, ni, nt, Psl, FUNENW, FUNEBNW, FUNEBSNW, FUNBWS, pStol)
 }
 
+getGradS <- function(Psl2, nt, pStol, GradS) {
+    .Call(`_iCenJMH_getGradS`, Psl2, nt, pStol, GradS)
+}
+
 getHazard <- function(CumuH0, survtime, status, H0, CUH0, HAZ0) {
     .Call(`_iCenJMH_getHazard`, CumuH0, survtime, status, H0, CUH0, HAZ0)
 }

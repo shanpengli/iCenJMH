@@ -156,6 +156,6 @@ Rcpp::List GetSE(const int nbeta, const int ntau, const int nSig,
                             Rcpp::Named("sealpha")=sealpha,
                             Rcpp::Named("seSig")=seSig);
   
-  
-  
 }
+
+

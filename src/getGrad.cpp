@@ -517,3 +517,45 @@ Eigen::MatrixXd getGradY(Eigen::VectorXd & beta, Eigen::VectorXd & tau,
   return S;
   
 }
+
+// [[Rcpp::export]]
+int getGradS(Eigen::Map<Eigen::MatrixXd> & Psl2, const Eigen::Map<Eigen::VectorXd> & nt,
+             const double pStol, Eigen::Map<Eigen::MatrixXd> & GradS) {
+  
+  int k = nt.size();
+  
+  int j, t;
+  double sumProb;
+  int countt=0;
+  for (j=0;j<k;j++) {
+    sumProb = 0;
+    if (nt(j) == 1) {
+      Psl2(countt, 5) = exp(-Psl2(countt, 4))/(1 - exp(-Psl2(countt, 4)));
+      countt++;
+    } else {
+      for (t=0;t<nt(j);t++) {
+        if (t == 0) {
+          if (Psl2(countt, 2) >= pStol) {
+            Psl2(countt, 5) = exp(-Psl2(countt, 4))/(1 - exp(-Psl2(countt, 4)))*Psl2(countt, 2);
+          } else {
+            Psl2(countt, 5) = 0;
+          }
+        } else {
+          sumProb -= Psl2(countt-1, 2);
+          if (Psl2(countt, 2) >= pStol) {
+            Psl2(countt, 5) = sumProb + exp(-Psl2(countt, 4))/(1 - exp(-Psl2(countt, 4)))*Psl2(countt, 2);
+          } else {
+            Psl2(countt, 5) = sumProb;
+          }
+
+        }
+        GradS(j, (Psl2(countt, 6) - 1)) = Psl2(countt, 5);
+        countt++;
+      }
+    }
+    
+  }
+  
+  return 0;
+  
+}
