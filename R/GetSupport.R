@@ -29,7 +29,9 @@ GetSupport <- function(iCen.data = NULL, iCen.tL = NULL, iCen.tR = NULL,
     SU <- iCen.data[i, iCen.tR] >= UniqueSi
     Si <- as.logical(SL*SU)
     Si <- UniqueSi[Si]
-    subdata <- data.frame(iCen.data[i, ID], Si, 1/length(Si))
+    Prob <- rchisq(length(Si), 6)
+    subdata <- data.frame(iCen.data[i, ID], Si, Prob/sum(Prob))
+    # subdata <- data.frame(iCen.data[i, ID], Si, 1/length(Si))
     subdata$wID <- c(1:nrow(subdata))
     colnames(subdata) <- c(ID, S, weight, weight.ID)
     SupportData <- rbind(SupportData, subdata)
