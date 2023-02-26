@@ -113,14 +113,16 @@ Eigen::MatrixXd GetCov(const Eigen::MatrixXd & S) {
   
   Eigen::MatrixXd SS = Eigen::MatrixXd::Zero(S.cols(), S.cols());
   Eigen::VectorXd N = Eigen::VectorXd::Zero(S.cols());
+  Eigen::VectorXd NT = Eigen::VectorXd::Zero(S.cols());
   int i;
   int k = S.rows();
   for (i=0;i<k;i++) {
     N = S.row(i);
+    NT += N;
     SS += MultVVoutprod(N);
   }
   
-  return SS.inverse();
+  return (SS - MultVVoutprod(NT)/k).inverse();
 }
 
 // [[Rcpp::export]]
