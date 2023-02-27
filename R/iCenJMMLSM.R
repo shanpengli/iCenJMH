@@ -285,7 +285,6 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
         Grad <- Grad[, -1]
         Grad <- as.matrix(Grad)
         Cov <- GetCov(Grad) 
-        Fisher <- GetCov2(Grad) 
         
         nbeta <- length(beta)
         ntau <- length(tau)
@@ -328,7 +327,7 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
         mycall <- match.call()
         
         result <- list(beta = beta, tau = tau, gamma = gamma, alpha = alpha,
-                       H0 = H0, Sig = Sig, vcov = Cov, Fisher = Fisher, phi = phi, sebeta = sebeta, setau = setau,
+                       H0 = H0, Sig = Sig, vcov = Cov, phi = phi, sebeta = sebeta, setau = setau,
                        seSig = seSig, segamma = segamma, sealpha = sealpha, 
                        iter = iter, convergence = convergence,
                        quadpoint = quadpoint, Ydata = Ydata, Tdata = Tdata, PropComp = PropComp, 
