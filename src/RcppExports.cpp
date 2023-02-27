@@ -152,6 +152,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// GetCov2
+Eigen::MatrixXd GetCov2(const Eigen::MatrixXd& S);
+RcppExport SEXP _iCenJMH_GetCov2(SEXP SSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type S(SSEXP);
+    rcpp_result_gen = Rcpp::wrap(GetCov2(S));
+    return rcpp_result_gen;
+END_RCPP
+}
 // GetSE
 Rcpp::List GetSE(const int nbeta, const int ntau, const int nSig, const int ngamma, const int nalpha, const Eigen::MatrixXd& Cov);
 RcppExport SEXP _iCenJMH_GetSE(SEXP nbetaSEXP, SEXP ntauSEXP, SEXP nSigSEXP, SEXP ngammaSEXP, SEXP nalphaSEXP, SEXP CovSEXP) {
@@ -372,6 +383,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_iCenJMH_MultMM", (DL_FUNC) &_iCenJMH_MultMM, 2},
     {"_iCenJMH_updatePSLR", (DL_FUNC) &_iCenJMH_updatePSLR, 4},
     {"_iCenJMH_GetCov", (DL_FUNC) &_iCenJMH_GetCov, 1},
+    {"_iCenJMH_GetCov2", (DL_FUNC) &_iCenJMH_GetCov2, 1},
     {"_iCenJMH_GetSE", (DL_FUNC) &_iCenJMH_GetSE, 6},
     {"_iCenJMH_getCovSF", (DL_FUNC) &_iCenJMH_getCovSF, 29},
     {"_iCenJMH_getEC", (DL_FUNC) &_iCenJMH_getEC, 28},

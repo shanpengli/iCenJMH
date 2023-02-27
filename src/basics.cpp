@@ -126,6 +126,23 @@ Eigen::MatrixXd GetCov(const Eigen::MatrixXd & S) {
 }
 
 // [[Rcpp::export]]
+Eigen::MatrixXd GetCov2(const Eigen::MatrixXd & S) {
+  
+  Eigen::MatrixXd SS = Eigen::MatrixXd::Zero(S.cols(), S.cols());
+  Eigen::VectorXd N = Eigen::VectorXd::Zero(S.cols());
+  Eigen::VectorXd NT = Eigen::VectorXd::Zero(S.cols());
+  int i;
+  int k = S.rows();
+  for (i=0;i<k;i++) {
+    N = S.row(i);
+    NT += N;
+    //SS += MultVVoutprod(N);
+  }
+  return MultVVoutprod(NT)/k;
+  // return (SS - MultVVoutprod(NT)/k).inverse();
+}
+
+// [[Rcpp::export]]
 Rcpp::List GetSE(const int nbeta, const int ntau, const int nSig, 
                  const int ngamma, const int nalpha, const Eigen::MatrixXd & Cov) {
   

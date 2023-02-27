@@ -49,6 +49,10 @@ GetCov <- function(S) {
     .Call(`_iCenJMH_GetCov`, S)
 }
 
+GetCov2 <- function(S) {
+    .Call(`_iCenJMH_GetCov2`, S)
+}
+
 GetSE <- function(nbeta, ntau, nSig, ngamma, nalpha, Cov) {
     .Call(`_iCenJMH_GetSE`, nbeta, ntau, nSig, ngamma, nalpha, Cov)
 }
