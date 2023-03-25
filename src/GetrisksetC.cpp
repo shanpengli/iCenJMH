@@ -99,7 +99,7 @@ Rcpp::List GetrisksetC(const Eigen::MatrixXd & cdata) {
     }
     if(i==2)
     {
-      for(j=0;j<a;j++)    H01(j,i) = 0.0001;
+      for(j=0;j<a;j++)    H01(j,i) = 0.000001;
     }
   }
   

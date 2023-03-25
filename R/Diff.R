@@ -7,14 +7,14 @@ Diff <- function(beta, prebeta, tau, pretau, gamma, pregamma, alpha, prealpha,
   gammaAbsdiff <- max(abs(gamma - pregamma))
   alphaAbsdiff <- max(abs(alpha - prealpha))
   SigAbsdiff <- max(abs(Sig - preSig))
-  H0Absdiff <- max(abs(H0[, 3] - preH0[, 3]))
+  ## H0Absdiff <- max(abs(H0[, 3] - preH0[, 3]))
 
   if (sum(is.na(betaAbsdiff)) || sum(is.na(tauAbsdiff)) || sum(is.na(gammaAbsdiff)) ||
-      sum(is.na(alphaAbsdiff)) || sum(is.na(SigAbsdiff)) || sum(is.na(H0Absdiff))) {
+      sum(is.na(alphaAbsdiff)) || sum(is.na(SigAbsdiff))) {
     return(2)
   } else {
     if ((betaAbsdiff > epsilon) || (tauAbsdiff > epsilon) || (gammaAbsdiff > epsilon)
-        || (alphaAbsdiff > epsilon) || (SigAbsdiff  > epsilon) || (H0Absdiff > epsilonH0)) {
+        || (alphaAbsdiff > epsilon) || (SigAbsdiff  > epsilon)) {
       return(1)
     } else {
       return(0)

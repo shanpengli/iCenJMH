@@ -57,6 +57,8 @@ the next probability in the E-step. Default is 1e-6.}
 \item{print.para}{Print detailed information of each iteration. Default is FALSE, i.e., not to print the iteration details.}
 
 \item{initial.para}{Input initial estimate of parameters. Default is FALSE.}
+
+\item{c}{tuning parameter for bandwidth of kernel estimate of hazards.}
 }
 \description{
 Joint modeling of longitudinal continuous data and competing risks

@@ -21,6 +21,7 @@
 ##' @param quadpoint the number of Gauss-Hermite quadrature points. Default is 20.
 ##' @param print.para Print detailed information of each iteration. Default is FALSE, i.e., not to print the iteration details.
 ##' @param initial.para Input initial estimate of parameters. Default is FALSE.
+##' @param c tuning parameter for bandwidth of kernel estimate of hazards.
 ##' @export
 ##'
 
@@ -35,7 +36,7 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
                        epsilon = 1e-04, epsilonH0 = 1e-04,
                        pStol = 1e-6,
                        quadpoint = 10, print.para = FALSE,
-                       initial.para = TRUE) {
+                       initial.para = TRUE, c = 0.95) {
   
   if (!inherits(long.formula, "formula") || length(long.formula) != 3) {
     stop("\nLinear mixed effects model must be a formula of the form \"resp ~ pred\".\n")
@@ -172,7 +173,7 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
 
     GetEfun <- GetE(beta, tau, gamma, alpha, H0, Sig, phi, Z, X1, W, Y,
                     X2, survtime, status, TID, YID, ni, nt, YS, xsmatrix, wsmatrix,
-                    S, iCen.ID, iCen.wID, pStol)
+                    S, iCen.ID, iCen.wID, pStol, c)
 
     GetMpara <- GetM(GetEfun, beta, tau, gamma, alpha, Sig, Z, X1, W, Y, X2, 
                      survtime, status, TID, YID, ni, nt, YS, subiCendata, phiname, pStol)
@@ -243,7 +244,7 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
         
         GetEfun <- GetE(beta, tau, gamma, alpha, H0, Sig, phi, Z, X1, W, Y,
                         X2, survtime, status, TID, YID, ni, nt, YS, xsmatrix, wsmatrix,
-                        S, iCen.ID, iCen.wID, pStol)
+                        S, iCen.ID, iCen.wID, pStol, c)
         
         GetfunE <- GetEfunSE(GetEfun, Z, TID, YID, ni, nt, YS, subiCendata)
         
@@ -278,6 +279,8 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
         colnames(GradS)[1] <- iCen.info$ID
         GradS <- as.data.frame(GradS)
         zeroindex <- which(abs(colSums(GradS[, -1])) <= pStol) + 1
+        zeroindex2 <- which(phi[, 2] <= pStol) + 1
+        zeroindex <- unique(c(zeroindex, zeroindex2))
         GradS <- GradS[, -zeroindex]
         
         Grad <- dplyr::left_join(GradY, GradT, by = iCen.info$ID)
@@ -329,7 +332,7 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
         result <- list(beta = beta, tau = tau, gamma = gamma, alpha = alpha,
                        H0 = H0, Sig = Sig, vcov = Cov, phi = phi, sebeta = sebeta, setau = setau,
                        seSig = seSig, segamma = segamma, sealpha = sealpha, 
-                       iter = iter, convergence = convergence,
+                       GetfunE = GetfunE, iter = iter, convergence = convergence,
                        quadpoint = quadpoint, Ydata = Ydata, Tdata = Tdata, PropComp = PropComp, 
                        FunCall_long = FunCall_long, FunCall_longVar = FunCall_longVar, 
                        FunCall_survival = FunCall_survival, random = random, 
