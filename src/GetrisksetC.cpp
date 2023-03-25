@@ -4,10 +4,11 @@
 
 //
 // [[Rcpp::export]]
-Rcpp::List GetrisksetCSF(const Eigen::MatrixXd & cdata) {
+Rcpp::List GetrisksetC(const Eigen::MatrixXd & cdata) {
   
   int k = cdata.rows();
-  int u=0,a=0;
+  int a=0;
+  double u=0;
   int i,j;
   Eigen::MatrixXd FH01 = Eigen::MatrixXd::Zero(k, 2);
   
@@ -16,18 +17,18 @@ Rcpp::List GetrisksetCSF(const Eigen::MatrixXd & cdata) {
   {
     if (cdata(j,1) == 1)
     {
-      u++;
+      u = u + cdata(j,2);
       if (j == k-1)
       {
         a++;
-        FH01(k-a,0) = cdata(j,0);
+        FH01(k-a,0) = cdata(j,3);
         FH01(k-a,1) = u;
         u=0;
       }
-      else if (cdata(j+1,0) != cdata(j,0))
+      else if (cdata(j+1,3) != cdata(j,3))
       {
         a++;
-        FH01(k-a,0) = cdata(j,0);
+        FH01(k-a,0) = cdata(j,3);
         FH01(k-a,1) = u;
         u=0;
       }
@@ -37,19 +38,19 @@ Rcpp::List GetrisksetCSF(const Eigen::MatrixXd & cdata) {
         {
           if (cdata(j,1) == 1)
           {
-            u++;
+            u = u + cdata(j,2);
             if (j == k-1)
             {
               a++;
-              FH01(k-a,0) = cdata(j,0);
+              FH01(k-a,0) = cdata(j,3);
               FH01(k-a,1) = u;
               u=0;
               break;
             }
-            else if (cdata(j+1,0) != cdata(j,0))
+            else if (cdata(j+1,3) != cdata(j,3))
             {
               a++;
-              FH01(k-a,0) = cdata(j,0);
+              FH01(k-a,0) = cdata(j,3);
               FH01(k-a,1) = u;
               u=0;
               break;
@@ -61,15 +62,15 @@ Rcpp::List GetrisksetCSF(const Eigen::MatrixXd & cdata) {
             if (j == k-1)
             {
               a++;
-              FH01(k-a,0) = cdata(j,0);
+              FH01(k-a,0) = cdata(j,3);
               FH01(k-a,1) = u;
               u=0;
               break;
             }
-            else if (cdata(j+1,0) != cdata(j,0))
+            else if (cdata(j+1,3) != cdata(j,3))
             {
               a++;
-              FH01(k-a,0) = cdata(j,0);
+              FH01(k-a,0) = cdata(j,3);
               FH01(k-a,1) = u;
               u=0;
               break;
@@ -98,7 +99,7 @@ Rcpp::List GetrisksetCSF(const Eigen::MatrixXd & cdata) {
     }
     if(i==2)
     {
-      for(j=0;j<a;j++)    H01(j,i) = 0.0001;
+      for(j=0;j<a;j++)    H01(j,i) = 0.000001;
     }
   }
   

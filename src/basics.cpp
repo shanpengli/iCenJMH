@@ -85,3 +85,77 @@ Eigen::MatrixXd MultMM(const Eigen::MatrixXd & x, const Eigen::MatrixXd & y) {
     Eigen::MatrixXd v = x * y;
     return v;
 }
+
+// [[Rcpp::export]]
+Eigen::MatrixXd updatePSLR(const Eigen::MatrixXd & YS, const Eigen::VectorXd & mdata,
+                           const Eigen::VectorXd & mdataS, const Eigen::VectorXd & idsum) {
+  
+  Eigen::MatrixXd pSLR = YS;
+  double phisu;
+  int k=idsum.size();
+  int i,j,q;
+  for (j=0;j<k;j++)
+  {
+    phisu=0;
+    q=mdata(j);
+    for (i=0;i<q;i++)
+    {
+      pSLR(mdataS(j)-1+i, 3)=exp(-phisu)*(1-exp(-YS(mdataS(j)-1+i, 3)))/(1-exp(-idsum(j)));
+      phisu += YS(mdataS(j)-1+i, 3);
+    }
+  }
+  
+  return pSLR;
+}
+
+// [[Rcpp::export]]
+Eigen::MatrixXd GetCov(const Eigen::MatrixXd & S) {
+  
+  Eigen::MatrixXd SS = Eigen::MatrixXd::Zero(S.cols(), S.cols());
+  Eigen::VectorXd N = Eigen::VectorXd::Zero(S.cols());
+  int i;
+  int k = S.rows();
+  for (i=0;i<k;i++) {
+    N = S.row(i);
+    SS += MultVVoutprod(N);
+  }
+  return SS.inverse();
+}
+
+
+// [[Rcpp::export]]
+Rcpp::List GetSE(const int nbeta, const int ntau, const int nSig, 
+                 const int ngamma, const int nalpha, const Eigen::MatrixXd & Cov) {
+  
+  Eigen::VectorXd sebeta = Eigen::VectorXd::Zero(nbeta);
+  Eigen::VectorXd setau = Eigen::VectorXd::Zero(ntau);
+  Eigen::VectorXd segamma = Eigen::VectorXd::Zero(ngamma);
+  Eigen::VectorXd sealpha = Eigen::VectorXd::Zero(nalpha);
+  Eigen::MatrixXd seSig = Eigen::MatrixXd::Zero(nSig, nSig);
+  int t,q;
+  for (t=0;t<nbeta;t++) sebeta(t) = sqrt(Cov(t,t));
+  for (t=0;t<ntau;t++) setau(t) = sqrt(Cov(nbeta+t,nbeta+t));
+  for (t=0;t<nSig;t++) seSig(t,t) = sqrt(Cov(nbeta+ntau+t,nbeta+ntau+t));
+  for(q=1;q<nSig;q++)
+  {
+    for(t=0;t<(nSig-q);t++) {
+      seSig(t,q+t) = sqrt(Cov(nbeta+ntau+nSig+t+(q-1)*(nSig-1),nbeta+ntau+nSig+t+(q-1)*(nSig-1)));
+      seSig(q+t,t) = seSig(t,q+t);
+    }
+  }
+  for (t=0;t<ngamma;t++) segamma(t) = sqrt(Cov(nbeta+ntau+(nSig+1)*nSig/2+t,
+                                 nbeta+ntau+(nSig+1)*nSig/2+t));
+  for (t=0;t<nalpha;t++) {
+    sealpha(t) = sqrt(Cov(nbeta+ntau+(nSig+1)*nSig/2+ngamma+t,
+                      nbeta+ntau+(nSig+1)*nSig/2+ngamma+t));
+  }
+  
+  return Rcpp::List::create(Rcpp::Named("sebeta")=sebeta,
+                            Rcpp::Named("setau")=setau,
+                            Rcpp::Named("segamma")=segamma,
+                            Rcpp::Named("sealpha")=sealpha,
+                            Rcpp::Named("seSig")=seSig);
+  
+}
+
+

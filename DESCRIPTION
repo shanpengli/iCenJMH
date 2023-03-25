@@ -23,8 +23,8 @@ License: GPL (>= 3)
 NeedsCompilation: yes
 Imports: Rcpp (>= 1.0.7), survival, dplyr, nlme, mvtnorm
 LinkingTo: Rcpp, RcppEigen
-Depends: R (>= 3.5.0), MASS, statmod, parallel, utils, stats
-RoxygenNote: 7.1.2
+Depends: R (>= 3.5.0), MASS, statmod, parallel, utils, stats, magrittr
+RoxygenNote: 7.2.3
 LazyData: true
 Packaged: 2022-04-08 02:16:44 UTC; shanpengli
 Suggests: 

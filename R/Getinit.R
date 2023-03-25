@@ -1,201 +1,162 @@
-
-Getinit <- function(cdata, ydata, long.formula, surv.formula, variance.formula,
-                    model, ID, RE, survinitial) {
+Getinit <- function(Tdata = Tdata, Ydata = Ydata, long.formula = long.formula,
+                    surv.formula = surv.formula, variance.formula = variance.formula,
+                    model = model, RE = RE, random = random, timeVar = timeVar,
+                    initial.para = initial.para, iCen.info = iCen.info) {
   
   long <- all.vars(long.formula)
   survival <- all.vars(surv.formula)
-  variance.formula <- all.vars(variance.formula)
-  cnames <- colnames(cdata)
-  ynames <- colnames(ydata)
-  
-  ##variable check
-  if (prod(long %in% ynames) == 0) {
-    Fakename <- which(long %in% ynames == FALSE)
-    stop(paste0("The variable ", long[Fakename], " not found"))
-  }
-  if (prod(survival %in% cnames) == 0) {
-    Fakename <- which(survival %in% cnames == FALSE)
-    stop(paste0("The variable ", survival[Fakename], " not found"))
-  }
-  if (!(ID %in% ynames)) {
-    stop(paste0("ID column ", ID, " not found in long_data"))
-  }
-  if (!(ID %in% cnames)) {
-    stop(paste0("ID column ", ID, " not found in surv_data"))
-  }
-  if (is.null(RE) & model == "interslope") {
-    stop("Random effects covariates must be specified.")
-  }
-  if (prod(variance.formula %in% ynames) == 0) {
-    Fakename <- which(variance.formula %in% ynames == FALSE)
-    stop(paste0("The WS variables ", long[Fakename], " not found"))
-  }
-  yID <- unique(as.character(ydata[, ID]))
-  cID <- as.character(cdata[, ID])
+  variance <- all.vars(variance.formula)
+  cnames <- colnames(Tdata)
+  ynames <- colnames(Ydata)
+  ID <- iCen.info$ID
+  yID <- unique(Ydata[, ID])
+  cID <- Tdata[, ID]
   if (prod(yID == cID) == 0) {
-    stop("The order of subjects in ydata doesn't match with cdata.")
+    stop("The order of subjects in Ydata doesn't match with Tdata.")
   }
   
-  ydim = dim(ydata)
-  cdim = dim(cdata)
+  ni <- as.data.frame(table(Ydata[, ID]))
   
-  orderdata <- sortdata(cdata, ydata, ID, surv.formula, long.formula)
+  Impute.Sdata <- iCen.info$iCen.midpoint.data[, c(ID, iCen.info$S)]
+  YdataS <- dplyr::left_join(Ydata, Impute.Sdata, by = ID)
+  TdataS <- dplyr::left_join(Tdata, Impute.Sdata, by = ID)
+    
+  ## obtain initial guess for the parameters in the longitudinal sub-model
+  YdataS$Ytime.aft.S <- YdataS[, timeVar] - YdataS[, iCen.info$S]
+  longVar <- long[-1]
+  long.init.formula <- as.formula(paste(long.formula[2], 
+                                        paste(c(iCen.info$S, "Ytime.aft.S", longVar), 
+                                               collapse = "+"), sep = "~"))
+  longfit <- nlme::lme(fixed = long.init.formula, random = random, data = YdataS, method = "REML", 
+                        control = nlme::lmeControl(opt = "optim"))
+    
+  ## obtain initial guess for the parameters in the survival sub-model
+  TdataS$T.aft.S <- TdataS[, survival[1]] - TdataS[, iCen.info$S]
+  survfmla.fixed <- c(iCen.info$S, survival[-c(1:2)])
+  survfmla.fixed <- paste(survfmla.fixed, collapse = "+")
+  survfmla.out1 <- paste0("survival::Surv(", "T.aft.S", ", ", survival[2], ")")
+  survfmla <- as.formula(paste(survfmla.out1, survfmla.fixed, sep = "~"))
+  fitSURV1 <- survival::coxph(formula = survfmla, data = TdataS, x = TRUE)
+    
+  if (!initial.para) {
+    gamma <- as.vector(fitSURV1$coefficients)
+    
+    beta <- longfit$coefficients$fixed
+    D <- as.matrix(nlme::getVarCov(longfit))
+    resid <- resid(longfit)
+    logResidsquare <- as.vector(log(resid^2))
+    
+    var.init.formula <- c(iCen.info$S, "T.aft.S", variance)
+    W <- as.matrix(data.frame(1, YdataS[, var.init.formula]))
+    
+    Tau <- OLS(W, logResidsquare)
+    tau <- Tau$betahat
+    
+    if (model == "intercept") {
+      alpha <- rep(0, 2)
+      Sig <- matrix(0, nrow = 2, ncol = 2)
+      Sig[1, 1] <- D
+      Sig[2, 2] <- 1
+      Sig[1, 2] <- 0.5*D
+      Sig[2, 1] <- Sig[1, 2]
+    } else {
+      alpha = rep(0, 3)
+      Sig <- matrix(0, nrow = 3, ncol = 3)
+      Sig[1:2, 1:2] <- D
+      Sig[3, 3] <- 1
+      Sig[1:2, 3] <- c(Sig[1, 1], Sig[2, 2])*0.5
+      Sig[3, 1:2] <- Sig[1:2, 3] 
+    }
+  } else {
+    beta = c(5, 2, -3, -3, 2)
+    tau = c(1, 0.05, 0.2, 0.1, -0.2)
+    gamma = c(-0.05, 0.2, -0.1)
+    alpha = c(0.5, -0.5)
+    Sig = matrix(c(1, 0.1, 0.1, 0.5), nrow = 2, ncol = 2)
+  }
   
-  ydata <- orderdata$ydata
-  cdata <- orderdata$cdata
-  mdata <- orderdata$mdata
+  fixed.para <- list(beta = beta, tau = tau, gamma = gamma, alpha = alpha, Sig = Sig)
   
-  ## extract covariates
-  X <- ydata[, long[-1]]
-  X <- as.matrix(cbind(1, X))
+  ## obtain covariates of Tdata
+  iCen.data <- iCen.info$iCen.data
+  Tdata <- dplyr::left_join(Tdata, iCen.data[, c(ID, iCen.info$S, iCen.info$weight, 
+                                                 iCen.info$weight.ID)], by = ID)
+  Tdata$T.aft.S <- Tdata[, survival[1]] - Tdata[, iCen.info$S]
+  Tdata <- Tdata[, c(ID, "T.aft.S", survival[2], iCen.info$S, survival[3:length(survival)], 
+                     iCen.info$weight, iCen.info$weight.ID)]
+  Tdata <- Tdata[order(-Tdata$T.aft.S), ]
+  survtime <- as.vector(Tdata[, "T.aft.S"])
+  status <- as.vector(Tdata[, survival[2]])
+  X2 <- as.matrix(Tdata[, c(4:(3+length(gamma)))])
+  sortTIDwID <- Tdata[, c(1, ncol(Tdata))]
+  
+  ## obtain covariates of Ydata
+  Ydata <- dplyr::left_join(Ydata, iCen.data[, c(ID, iCen.info$S, iCen.info$weight, 
+                                                 iCen.info$weight.ID)], by = ID)
+  Ydata <- Ydata[order(Ydata[, ID], Ydata[, iCen.info$weight.ID]), ]
+  Ydata$Ytime.aft.S <- Ydata[, timeVar] - Ydata[, iCen.info$S]
+  ##Ydata <- Ydata[, c(ID, iCen.info$weight.ID, long[1], iCen.info$S, "Ytime.aft.S", longVar, iCen.info$weight)]
+  X1 <- as.matrix(cbind(1, Ydata[, c(iCen.info$S, "Ytime.aft.S", longVar)]))
+  W <- as.matrix(cbind(1, Ydata[, c(iCen.info$S, "Ytime.aft.S", variance)]))
+  
+  WSfmla <- c(iCen.info$S, "Ytime.aft.S", variance) 
+  WSfmla <- paste(WSfmla, collapse = "+")
+  variance.formula <- as.formula(paste("log(sigma^2)", WSfmla, sep = "~"))
   
   ##random effect covariates
   if (model == "interslope") {
     if (prod(RE %in% ynames) == 0) {
       Fakename <- which(RE %in% ynames == FALSE)
-      stop(paste0("The variable ", RE[Fakename], " not found"))
+      stop(paste0("The variable ", RE[Fakename], " not found in the longitudinal dataset.\n"))
+    } else if (prod(RE %in% long) == 0) {
+      Fakename <- which(RE %in% long == FALSE)
+      stop(paste0("The variable ", RE[Fakename], " not found in the long.formula argument. 
+                  Please include this variable in the random argument.\n"))
     } else {
-      random.xnam <- paste(RE[1:length(RE)], sep = "")
-      fmla.random <- paste("(", paste(random.xnam, collapse= "+"), "|", ID, ")", sep = "")
-      p1a <- 1 + length(RE)
-      Z <- ydata[, RE]
-      Z <- cbind(1, Z)
+      if (RE != timeVar) {
+        Z <- Ydata[, RE]
+        Z <- cbind(1, Z)
+        Z <- as.matrix(Z)
+      } else {
+        Z <- Ydata[, "Ytime.aft.S"]
+        Z <- cbind(1, Z)
+        Z <- as.matrix(Z)
+      }
     }
   } else if (model == "intercept") {
     if (!is.null(RE)) {
-      stop("You are fitting a mixed effects location scale model with random intercept only
+      stop("You are fitting a mixed effects model with random intercept only
            but random effects covariates are specified at the same time. Please respecify your model!")
     }
-    p1a <- 1
-    Z <- rep(1, ydim[1])
+    Z <- rep(1, nrow(X1))
     Z <- as.data.frame(Z)
     Z <- as.matrix(Z)
-    fmla.random <- paste("(", 1, "|", ID, ")", sep = "")
     
   } else {
     stop("model should be one of the following options: interslope or intercept.")
   }
   
-  W <- ydata[, variance.formula]
-  W <- as.matrix(cbind(1, W))
-  Y <- as.vector(ydata[, long[1]])
-  X2 <- as.matrix(cdata[, survival[3:length(survival)]])
-  survtime <- as.vector(cdata[, survival[1]])
-  cmprsk <- as.vector(cdata[, survival[2]])
+  Y <- Ydata[, long[1]]
   
-  ## get initial estimates of fixed effects in mixed effect location scale model
-  xnam <- paste(long[2:length(long)], sep = "")
-  fmla.fixed <- paste(long[1], " ~ ", paste(xnam, collapse= "+"))
-  fmla <- as.formula(paste(fmla.fixed, fmla.random, sep = "+"))
+  YIDwID <- Ydata[, c(ID, iCen.info$weight.ID)] 
   
-  longfit <- lme4::lmer(fmla, data = ydata, REML = TRUE)
-  beta <- lme4::fixef(longfit)
-  D <- lme4::VarCorr(longfit)
-  name <- names(D)
-  D <- as.data.frame(D[name])
-  D <- as.matrix(D)
-  resid <- Y - as.vector(fitted(longfit))
-  ## get initial estimates of fixed effects in WS variance
-  logResidsquare <- as.vector(log(resid^2))
-  Tau <- OLS(W, logResidsquare)
-  tau <- Tau$betahat
-  print(tau)
-  if (sum(unique(cmprsk)) <= 3) {
-    if (prod(c(0, 1, 2) %in% unique(cmprsk))) {
-      if (survinitial) {
-        ## get initial estimates of fixed effects in competing risks model
-        surv_xnam <- paste(survival[3:length(survival)], sep = "")
-        survfmla.fixed <- paste(surv_xnam, collapse= "+")
-        survfmla.out1 <- paste0("survival::Surv(", survival[1], ", ", survival[2], "==1)")
-        survfmla <- as.formula(paste(survfmla.out1, survfmla.fixed, sep = "~"))
-        fitSURV1 <- survival::coxph(formula = survfmla, data = cdata, x = TRUE)
-        gamma1 <- as.vector(fitSURV1$coefficients)
-        
-        survfmla.out2 <- paste0("survival::Surv(", survival[1], ", ", survival[2], "==2)")
-        survfmla <- as.formula(paste(survfmla.out2, survfmla.fixed, sep = "~"))
-        fitSURV2 <- survival::coxph(formula = survfmla, data = cdata, x = TRUE)
-        gamma2 <- as.vector(fitSURV2$coefficients)  
-      } else {
-        gamma1 = as.vector(rep(0, ncol(X2)))
-        gamma2 = as.vector(rep(0, ncol(X2)))
-      }
-      
-      
-      vee1 = 0
-      vee2 = 0
-      
-      if (model == "intercept") {
-        alpha1 = as.vector(0)
-        alpha2 = as.vector(0)
-        
-        Sig <- matrix(0, nrow = 2, ncol = 2)
-        Sig[1, 1] <- D
-        Sig[2, 2] <- 1
-        Sig[1, 2] <- 0.5*D
-        Sig[2, 1] <- Sig[1, 2]
-        
-      } else {
-        alpha1 = c(0, 0)
-        alpha2 = c(0, 0)
-        Sig <- matrix(0, nrow = 3, ncol = 3)
-        Sig[1:2, 1:2] <- D
-        Sig[3, 3] <- 1
-        Sig[1:2, 3] <- c(Sig[1, 1], Sig[2, 2])*0.5
-        Sig[3, 1:2] <- Sig[1:2, 3] 
-      }
-      
-      a <- list(beta, tau, gamma1, gamma2, alpha1, alpha2, vee1, vee2, Sig, 
-                Z, X, W, Y, X2, survtime, cmprsk, cdata, mdata)
-      
-      names(a) <- c("beta", "tau", "gamma1", "gamma2", "alpha1", "alpha2", "vee1", "vee2", "Sig",
-                    "Z", "X1", "W", "Y", "X2", "survtime", "cmprsk",
-                    "cdata", "mdata")
-      
-      return(a)
-      
-    } 
-    
-    if (prod(c(0, 1) %in% unique(cmprsk))) {
+  
+  ## obtain initial guess of baseline hazards
+  subTdata <- Tdata[, c(ID, survival[2], iCen.info$weight, "T.aft.S")]
+  H0 <- getBH(subTdata)
+  
+  ## obtain initial guess of hazard of initial event
+  subiCendata <- iCen.data[, c(ID, iCen.info$S, iCen.info$weight)]
+  subiCendata <- subiCendata[order(-subiCendata[, iCen.info$S]), ]
+  subiCendata <- as.matrix(subiCendata)
+  phi <- GetrisksetS(subiCendata)
+  phi <- as.data.frame(phi)
+  colnames(phi) <- c(iCen.info$S, iCen.info$weight, "phi.Su")
 
-      ## get initial estimates of fixed effects in survival model
-      surv_xnam <- paste(survival[3:length(survival)], sep = "")
-      survfmla.fixed <- paste(surv_xnam, collapse= "+")
-      survfmla.out1 <- paste0("survival::Surv(", survival[1], ", ", survival[2], ")")
-      survfmla <- as.formula(paste(survfmla.out1, survfmla.fixed, sep = "~"))
-      print(survfmla)
-      fitSURV1 <- survival::coxph(formula = survfmla, data = cdata, x = TRUE)
-      gamma1 <- as.vector(fitSURV1$coefficients)
-      
-      vee1 = 0
-      
-      if (model == "intercept") {
-        alpha1 = as.vector(0)
-        Sig <- matrix(0, nrow = 2, ncol = 2)
-        Sig[1, 1] <- D
-        Sig[2, 2] <- 1
-        Sig[1, 2] <- 0.5*D
-        Sig[2, 1] <- Sig[1, 2]
-      } else {
-        alpha1 = c(0, 0)
-        Sig <- matrix(0, nrow = 3, ncol = 3)
-        Sig[1:2, 1:2] <- D
-        Sig[3, 3] <- 1
-        Sig[1:2, 3] <- c(Sig[1, 1], Sig[2, 2])*0.5
-        Sig[3, 1:2] <- Sig[1:2, 3] 
-      }
-      
-      a <- list(beta, tau, gamma1, alpha1, vee1, Sig, 
-                Z, X, W, Y, X2, survtime, cmprsk, cdata, mdata)
-      
-      names(a) <- c("beta", "tau", "gamma1", "alpha1", "vee1", "Sig",
-                    "Z", "X1", "W", "Y", "X2", "survtime", "cmprsk",
-                    "cdata", "mdata")
-      
-      return(a)
-      
-    }
-  } else {
-    stop(paste0("The ", survival[2], " variable is specified incorrectly! Program stops."))
-  }
+  return(list(fixed.para = fixed.para, H0 = H0, Tdata = Tdata, Ydata = Ydata, phi = phi,
+              X1 = X1, Z = Z, W = W, Y = Y, X2 = X2, sortTIDwID = sortTIDwID, YIDwID = YIDwID,
+              ni = ni, survtime = survtime, status = status,
+              long.formula = long.init.formula, surv.formula = survfmla, 
+              variance.formula = variance.formula))
   
 }
