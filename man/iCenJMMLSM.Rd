@@ -15,11 +15,12 @@ iCenJMMLSM(
   iCen.info = NULL,
   maxiter = 1000,
   epsilon = 1e-04,
-  epsilonH0 = 1e-04,
   pStol = 1e-06,
   quadpoint = 10,
   print.para = FALSE,
-  initial.para = TRUE
+  initial.para = TRUE,
+  c = 0.95,
+  hazard.kernel = c("Epanechnikov", "uniform", "biweight")
 )
 }
 \arguments{
@@ -46,8 +47,6 @@ Alternatively. Fitting a random intercept and slope model takes the form ~ x1 + 
 
 \item{epsilon}{Tolerance parameter for parametric components. Default is 0.0001.}
 
-\item{epsilonH0}{Tolerance parameter for non-parametric Breslow estimator for the event of interest. Default is 0.0001.}
-
 \item{pStol}{Tolerance parameter for the posterior probability of an initial event time Si. 
 If the posterior probability is less than a specified value, then override the probability and move forward to 
 the next probability in the E-step. Default is 1e-6.}
@@ -59,6 +58,8 @@ the next probability in the E-step. Default is 1e-6.}
 \item{initial.para}{Input initial estimate of parameters. Default is FALSE.}
 
 \item{c}{tuning parameter for bandwidth of kernel estimate of hazards.}
+
+\item{hazard.kernel}{a character string of specifying the choice of kernel smoothing method for the hazard rates.}
 }
 \description{
 Joint modeling of longitudinal continuous data and competing risks

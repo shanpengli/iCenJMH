@@ -14,7 +14,6 @@
 ##' @param timeVar a string of an interval-censored time covariate.
 ##' @param maxiter the maximum number of iterations of the EM algorithm that the function will perform. Default is 10000.
 ##' @param epsilon Tolerance parameter for parametric components. Default is 0.0001.
-##' @param epsilonH0 Tolerance parameter for non-parametric Breslow estimator for the event of interest. Default is 0.0001.
 ##' @param pStol Tolerance parameter for the posterior probability of an initial event time Si. 
 ##' If the posterior probability is less than a specified value, then override the probability and move forward to 
 ##' the next probability in the E-step. Default is 1e-6. 
@@ -22,6 +21,7 @@
 ##' @param print.para Print detailed information of each iteration. Default is FALSE, i.e., not to print the iteration details.
 ##' @param initial.para Input initial estimate of parameters. Default is FALSE.
 ##' @param c tuning parameter for bandwidth of kernel estimate of hazards.
+##' @param hazard.kernel a character string of specifying the choice of kernel smoothing method for the hazard rates.
 ##' @export
 ##'
 
@@ -33,10 +33,11 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
                        timeVar = NULL,
                        iCen.info = NULL,
                        maxiter = 1000, 
-                       epsilon = 1e-04, epsilonH0 = 1e-04,
+                       epsilon = 1e-04,
                        pStol = 1e-6,
                        quadpoint = 10, print.para = FALSE,
-                       initial.para = TRUE, c = 0.95) {
+                       initial.para = TRUE, c = 0.95,
+                       hazard.kernel = c("Epanechnikov", "uniform", "biweight")) {
   
   if (!inherits(long.formula, "formula") || length(long.formula) != 3) {
     stop("\nLinear mixed effects model must be a formula of the form \"resp ~ pred\".\n")
@@ -143,8 +144,15 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
   iCen.wID <- iCen.info$weight.ID
   
   ni <- getinit$ni
-  nt <- as.data.frame(table(YS[, iCen.info$ID]))
+  # nt <- as.data.frame(table(YS[, iCen.info$ID]))
+  nt <- YS %>%
+    data.frame() %>%
+    dplyr::group_by_(iCen.info$ID) %>%
+    dplyr::summarise(n = n())
 
+  iCen.observed <- data.frame(unique(YS[, iCen.info$ID]), iCen.info$iCen.observed)
+  colnames(iCen.observed) <- c(iCen.info$ID, "iCen.observed")
+  
   repeat
   {
     iter <- iter + 1
@@ -173,10 +181,11 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
 
     GetEfun <- GetE(beta, tau, gamma, alpha, H0, Sig, phi, Z, X1, W, Y,
                     X2, survtime, status, TID, YID, ni, nt, YS, xsmatrix, wsmatrix,
-                    S, iCen.ID, iCen.wID, pStol, c)
+                    S, iCen.ID, iCen.wID, pStol, c, hazard.kernel)
 
     GetMpara <- GetM(GetEfun, beta, tau, gamma, alpha, Sig, Z, X1, W, Y, X2, 
-                     survtime, status, TID, YID, ni, nt, YS, subiCendata, phiname, pStol)
+                     survtime, status, TID, YID, ni, nt, YS, subiCendata, 
+                     phiname, pStol, iCen.observed)
     
       beta <- GetMpara$beta
       tau <- GetMpara$tau
@@ -187,14 +196,14 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
       phi <- GetMpara$phi
       
         if((Diff(beta, prebeta, tau, pretau, gamma, pregamma, alpha, prealpha, 
-                 Sig, preSig, H0, preH0, phi, prephi, epsilon, epsilonH0) != 1)
+                 Sig, preSig, H0, preH0, phi, prephi, epsilon) != 1)
             || (iter == maxiter) || (!is.list(GetEfun$AllFUN)) || (!is.list(GetMpara))) {
           break
         }
   }
   
   if (Diff(beta, prebeta, tau, pretau, gamma, pregamma, alpha, prealpha, 
-           Sig, preSig, H0, preH0, phi, prephi, epsilon, epsilonH0) == 2) {
+           Sig, preSig, H0, preH0, phi, prephi, epsilon) == 2) {
     writeLines("program stops because of numerical issues")
     convergence = 0
     beta <- NULL
@@ -244,8 +253,9 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
         
         GetEfun <- GetE(beta, tau, gamma, alpha, H0, Sig, phi, Z, X1, W, Y,
                         X2, survtime, status, TID, YID, ni, nt, YS, xsmatrix, wsmatrix,
-                        S, iCen.ID, iCen.wID, pStol, c)
+                        S, iCen.ID, iCen.wID, pStol, c, hazard.kernel)
         
+        nt <- as.data.frame(table(YS[, 1]))
         GetfunE <- GetEfunSE(GetEfun, Z, TID, YID, ni, nt, YS, subiCendata)
         
         Psl <- GetfunE$Psl
@@ -275,7 +285,7 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
         GradT <- aggregate(GradT[, -c(1:2)], by=list(GradT[, 1]), FUN = sum)
         colnames(GradT)[1] <- iCen.info$ID
         
-        GradS <- GetGradS(Psl, phi, iCen.info, nt, pStol)
+        GradS <- GetGradS(Psl, phi, iCen.info, nt, pStol, iCen.observed)
         colnames(GradS)[1] <- iCen.info$ID
         GradS <- as.data.frame(GradS)
         zeroindex <- which(abs(colSums(GradS[, -1])) <= pStol) + 1
@@ -305,25 +315,24 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
 
         long <- all.vars(long.formula)
         survival <- all.vars(surv.formula)
-
-        names(beta) <- c("intercept", long[-1])
-        variance.form <- all.vars(variance.formula)
-        names(tau) <- paste0(c("intercept", variance.form), "_var")
-
-        names(gamma) <- paste0(survival[-(1:2)], "_1")
+        variance <- all.vars(variance.formula)
+        
+        names(beta) <- c("(Intercept)", iCen.info$S, "Ytime.aft.S", long[-1])
+        names(tau) <- c("(Intercept)", iCen.info$S, "Ytime.aft.S", variance)
+        names(gamma) <- c(iCen.info$S, survival[-c(1:2)])
 
         PropComp <- as.data.frame(table(Tdata[, survival[2]]))
 
         LongOut <- long[1]
-        LongX <- paste0(long[-1], collapse = "+")
+        LongX <- paste0(names(beta)[-1], collapse = "+")
         FunCall_long <- as.formula(paste(LongOut, LongX, sep = "~"))
 
         LongVarOut <- "log(sigma^2)"
-        LongVarX <- paste0(variance.form, collapse = "+")
+        LongVarX <- paste0(names(tau)[-1], collapse = "+")
         FunCall_longVar <- as.formula(paste(LongVarOut, LongVarX, sep = "~"))
 
         SurvOut <- paste0("Surv(", survival[1], ",", survival[2], ")")
-        SurvX <- paste0(survival[-(1:2)], collapse = "+")
+        SurvX <- paste0(names(gamma), collapse = "+")
         FunCall_survival <- as.formula(paste(SurvOut, SurvX, sep = "~"))
 
         ## return the joint modelling result
@@ -336,7 +345,7 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
                        quadpoint = quadpoint, Ydata = Ydata, Tdata = Tdata, PropComp = PropComp, 
                        FunCall_long = FunCall_long, FunCall_longVar = FunCall_longVar, 
                        FunCall_survival = FunCall_survival, random = random, 
-                       mycall = mycall, iCen.info = iCen.info)
+                       mycall = mycall, iCen.info = iCen.info, hazard.kernel = hazard.kernel, c = c)
 
         class(result) <- "iCenJMMLSM"
 

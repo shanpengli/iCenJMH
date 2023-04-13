@@ -42,9 +42,8 @@ bootsfitRI <- function(i, seed = 99, n = 100, phi = 0.04,
                         timeVar = "Oij",
                         iCen.info = iCen.info,
                         maxiter = maxiter, epsilon = 1e-04,
-                        epsilonH0 = 1e-03,
                         quadpoint = quadpoint, print.para = TRUE,
-                        initial.para = TRUE), silent = TRUE)
+                        initial.para = TRUE, hazard.kernel = "Epanechnikov"), silent = FALSE)
   b <- proc.time()
   time <- (b - a)[3]
   

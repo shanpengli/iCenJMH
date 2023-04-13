@@ -22,16 +22,25 @@ GetSupport <- function(iCen.data = NULL, iCen.tL = NULL, iCen.tR = NULL,
                                   iCen.data[, iCen.tR], uniform)
   colnames(iCen.uniform.data) <- c(ID, iCen.tL, iCen.tR, S)
   
-  UniqueSi <- sort(unique(c(iCen.data[, iCen.tL], iCen.data[, iCen.tR])))
+  iCen.observed <- ifelse(iCen.data[, iCen.tL] < iCen.data[, iCen.tR], TRUE, FALSE)
+  
+  UniqueSi <- sort(unique(c(iCen.data[iCen.observed, iCen.tL], 
+                            iCen.data[iCen.observed, iCen.tR])))
   SupportData <- NULL
   for (i in 1:nrow(iCen.data)) {
-    SL <- iCen.data[i, iCen.tL] < UniqueSi
-    SU <- iCen.data[i, iCen.tR] >= UniqueSi
-    Si <- as.logical(SL*SU)
-    Si <- UniqueSi[Si]
-    subdata <- data.frame(iCen.data[i, ID], Si, 1/length(Si))
-    subdata$wID <- c(1:nrow(subdata))
-    colnames(subdata) <- c(ID, S, weight, weight.ID)
+    if (iCen.data[i, iCen.tL] < iCen.data[i, iCen.tR]) {
+      SL <- iCen.data[i, iCen.tL] < UniqueSi
+      SU <- iCen.data[i, iCen.tR] >= UniqueSi
+      Si <- as.logical(SL*SU)
+      Si <- UniqueSi[Si]
+      subdata <- data.frame(iCen.data[i, ID], Si, 1/length(Si))
+      subdata$wID <- c(1:nrow(subdata))
+      colnames(subdata) <- c(ID, S, weight, weight.ID)
+    } else {
+      subdata <- data.frame(iCen.data[i, ID], iCen.data[i, iCen.tR], 1)
+      subdata$wID <- c(1:nrow(subdata))
+      colnames(subdata) <- c(ID, S, weight, weight.ID)
+    }
     SupportData <- rbind(SupportData, subdata)
   }
   iCen.data <- dplyr::left_join(iCen.data, SupportData, by = ID)
@@ -39,7 +48,8 @@ GetSupport <- function(iCen.data = NULL, iCen.tL = NULL, iCen.tR = NULL,
   result <- list(iCen.data = iCen.data, S = S, weight = weight, ID = ID, weight.ID = weight.ID,
                  iCen.tL = iCen.tL, iCen.tR = iCen.tR,
                  iCen.midpoint.data = iCen.midpoint.data,
-                 iCen.uniform.data = iCen.uniform.data)
+                 iCen.uniform.data = iCen.uniform.data,
+                 iCen.observed = iCen.observed)
   class(result) <- "iCen.info.iCenJMMLSM"
   return(result)
 }

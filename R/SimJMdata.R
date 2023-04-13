@@ -11,25 +11,23 @@ SimJMdata <- function(seed = 99, n = 100, phi = 0.04,
                       alpha = c(0.5, -0.5),
                       beta = c(5, 1, 2, -3, 3),
                       tau = c(-0.5, -0.1, -0.2, 0.8, 0.4),
-                      increment = 2) {
+                      increment = 2,
+                      digits = 1,
+                      exact.obs = 0.5) {
   
   set.seed(seed = seed)
+  
+  exact <- sample(c(1, 0), size = n, replace = TRUE, prob = c(exact.obs, 1 - exact.obs))
   ### generate interval censored event time for S_i
   ## 1. generate actual event time S_i
-  # Si <- rep(0, n)
-  # for (i in 1:n) {
-  #   Si[i] <- round(rexp(1, rate = phi), 1) + 0.1
-  #   while (Si[i] > 20) {
-  #     Si[i] <- round(rexp(1, rate = phi), 1) + 0.1
-  #   }
-  # }
-  Si <- round(runif(n, 0.1, 5), 1)
+  Si <- round(runif(n, 0.1, 5), digits)
+  
   ## 2. generate multiple 20 inspection times C_ij
   Ci <- matrix(0, nrow = n, ncol = nc)
   Ci[, 1] <- 0
   for (i in 1:nrow(Ci)) {
     for (j in 2:ncol(Ci)) {
-      Ci[i, j] <- round(Ci[i, j-1] + runif(1, min = Cmin, max = Cmax), 1)
+      Ci[i, j] <- round(Ci[i, j-1] + runif(1, min = Cmin, max = Cmax), digits)
     }
   }
   
@@ -37,12 +35,18 @@ SimJMdata <- function(seed = 99, n = 100, phi = 0.04,
   Li <- vector()
   Ri <- vector()
   for (i in 1:nrow(Ci)) {
-    for (j in 1:(ncol(Ci)-1)) {
-      if (Ci[i, j] < Si[i] && Si[i] <= Ci[i, j+1]) {
-        Li[i] <- round(Ci[i, j], 1)
-        Ri[i] <- round(Ci[i, j+1], 1)
-      } else next
+    if (exact[i] == 0) {
+      for (j in 1:(ncol(Ci)-1)) {
+        if (Ci[i, j] < Si[i] && Si[i] <= Ci[i, j+1]) {
+          Li[i] <- Ci[i, j]
+          Ri[i] <- Ci[i, j+1]
+        } else next
+      }
+    } else {
+       Ri[i] <- Si[i]
+       Li[i] <- Si[i] 
     }
+
   }
   EventTime <- data.frame(Li, Ri, Si)
   
