@@ -1,17 +1,21 @@
 GetM <- function(GetEfun, beta, tau, gamma, alpha, Sig, Z, X1, W, Y, X2, 
-                 survtime, status, TID, YID, ni, nt, YS, subiCendata, phiname, pStol) {
+                 survtime, status, TID, YID, ni, nt, YS, subiCendata, phiname, 
+                 pStol, iCen.observed) {
   
   Psl <- GetEfun$Psl
   htheta <- GetEfun$AllFUN
   ni <- as.vector(as.numeric(ni[, 2]))
+  nt <- as.data.frame(table(YS[, 1]))
   nt <- as.vector(as.numeric(nt[, 2]))
   
   if(is.list(htheta)) {
     
     ## update phi
     phi <- subiCendata
+    phi <- dplyr::left_join(phi, iCen.observed, by = colnames(phi)[1])
     phi[, 3] <- Psl[, 3]
     phi <- phi[order(-phi[, 2]), ]
+    phi <- phi[phi$iCen.observed, ]
     phi <- as.matrix(phi)
     phi <- GetrisksetS(phi)
     phi <- as.data.frame(phi)

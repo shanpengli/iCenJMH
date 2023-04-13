@@ -74,7 +74,7 @@ Getinit <- function(Tdata = Tdata, Ydata = Ydata, long.formula = long.formula,
     alpha = c(0.5, -0.5)
     Sig = matrix(c(1, 0.1, 0.1, 0.5), nrow = 2, ncol = 2)
   }
-  
+
   fixed.para <- list(beta = beta, tau = tau, gamma = gamma, alpha = alpha, Sig = Sig)
   
   ## obtain covariates of Tdata
@@ -146,8 +146,15 @@ Getinit <- function(Tdata = Tdata, Ydata = Ydata, long.formula = long.formula,
   H0 <- getBH(subTdata)
   
   ## obtain initial guess of hazard of initial event
+  iCen.observed <- data.frame(unique(iCen.info$iCen.data[, iCen.info$ID]), iCen.info$iCen.observed)
+  colnames(iCen.observed) <- c(iCen.info$ID, "iCen.observed")
+  
   subiCendata <- iCen.data[, c(ID, iCen.info$S, iCen.info$weight)]
+  subiCendata <- dplyr::left_join(subiCendata, iCen.observed, by = iCen.info$ID)
+  
   subiCendata <- subiCendata[order(-subiCendata[, iCen.info$S]), ]
+  subiCendata <- subiCendata[subiCendata$iCen.observed, ]
+  
   subiCendata <- as.matrix(subiCendata)
   phi <- GetrisksetS(subiCendata)
   phi <- as.data.frame(phi)

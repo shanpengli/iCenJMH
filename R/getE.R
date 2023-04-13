@@ -1,6 +1,6 @@
 GetE <- function(beta, tau, gamma, alpha, H0, Sig, phi, Z, X1, W, Y,
                  X2, survtime, status, TID, YID, ni, nt, YS, xsmatrix, wsmatrix,
-                 S, iCen.ID, iCen.wID, pStol, c) {
+                 S, iCen.ID, iCen.wID, pStol, c, hazard.kernel) {
 
   ## obtain p(S | L, R)
   YS <- dplyr::left_join(YS, phi[, c(1, 3)], by = S)
@@ -36,7 +36,15 @@ GetE <- function(beta, tau, gamma, alpha, H0, Sig, phi, Z, X1, W, Y,
   uncensoredsurvtime <- uncensoredsurvtime[order(uncensoredsurvtime[, 1]), ]
   for (i in 1:nrow(uncensoredsurvtime)) {
     x <- as.numeric(abs(rep(uncensoredsurvtime[i, 1], nrow(H0)) - H0[, 1])/b <= 1)
-    kx <- 0.75*(1-(abs(rep(uncensoredsurvtime[i, 1], nrow(H0)) - H0[, 1])/b)^2)
+    if (hazard.kernel == "Epanechnikov") {
+      kx <- 0.75*(1-(abs(rep(uncensoredsurvtime[i, 1], nrow(H0)) - H0[, 1])/b)^2)
+    } else if (hazard.kernel == "uniform") {
+      kx <- 0.5
+    } else if (hazard.kernel == "biweight") {
+      kx <- 15/16*(1-(abs(rep(uncensoredsurvtime[i, 1], nrow(H0)) - H0[, 1])/b)^2)^2
+    } else {
+      stop("Please specify one of the following kernels: Epanechnikov, uniform, biweight.")
+    }
     H0smooth <- cbind(H0, x, kx)
     newHazard <- H0smooth[, 4]*H0smooth[, 5]*H0smooth[, 3]
     H0smooth <- cbind(H0smooth, newHazard)
@@ -47,7 +55,12 @@ GetE <- function(beta, tau, gamma, alpha, H0, Sig, phi, Z, X1, W, Y,
   HAZ0 <- rep(0, n)
   getHazard(CumukernelH0, survtime, status, kernelH0, CUH0, HAZ0)
   
-  H0T <- cbind(TID, CUH0crude, HAZ0)
+  ## recover HAZ0crude for exact observed initial event time
+  HAZ <- cbind(TID, HAZ0crude, HAZ0)
+  HAZ <- dplyr::left_join(HAZ, nt, by = colnames(nt)[1])
+  HAZ$newHAZ0 <- ifelse(HAZ$n == 1, HAZ$HAZ0crude, HAZ$HAZ0)
+  
+  H0T <- cbind(TID, CUH0crude, HAZ$newHAZ0)
   YSID <- as.data.frame(YS[, c(iCen.ID, iCen.wID)])
   H0Y <- dplyr::left_join(YSID, H0T, by = c(iCen.ID, iCen.wID))
   H0Y <- as.matrix(H0Y)
@@ -66,6 +79,7 @@ GetE <- function(beta, tau, gamma, alpha, H0, Sig, phi, Z, X1, W, Y,
   Psl <- as.matrix(Psl)
   
   ni <- as.vector(as.numeric(ni[, 2]))
+  nt <- as.data.frame(table(YS[, 1]))
   nt <- as.vector(as.numeric(nt[, 2]))
   
   FUNENW <- rep(0, nrow(Psl))

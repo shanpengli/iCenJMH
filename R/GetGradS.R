@@ -1,4 +1,4 @@
-GetGradS <- function(Psl, phi, iCen.info, nt, pStol) {
+GetGradS <- function(Psl, phi, iCen.info, nt, pStol, iCen.observed) {
   
   Psl2 <- cbind(Psl, iCen.info$iCen.data[, iCen.info$S])
   colnames(Psl2)[4] <- colnames(phi)[1]
@@ -13,6 +13,7 @@ GetGradS <- function(Psl, phi, iCen.info, nt, pStol) {
   Psl2 <- dplyr::left_join(Psl2, Sindex, by = colnames(phi)[1])
   Psl2 <- as.matrix(Psl2)
   status <- getGradS(Psl2, nt, pStol, GradS)
+  GradS <- GradS*iCen.observed[, 2]
   Psl2 <- as.data.frame(Psl2)
   ID <- unique(Psl2[, iCen.info$ID])
   GradS <- cbind(ID, GradS)
