@@ -1,30 +1,36 @@
 ##' @export
 ##'
 
-bootsfitRI <- function(i, seed = 99, n = 100, phi = 0.04,
+bootsfitRI <- function(i, seed = 99, n = 100,
                        nc = 100,
                        covbw = matrix(c(0.5, 0.25, 0.25, 0.5), nrow = 2, ncol = 2),
                        lambda = 0.3, lambdaC = 0.05,
                        Cmin = 1,
                        Cmax = 5,
+                       CL = 5,
+                       CU = 10,
                        gamma = c(-0.05, 0.2, -0.1),
                        alpha = c(0.5, -0.5),
                        beta = c(5, 1, 2, -3, 3),
                        tau = c(-0.5, -0.1, -0.2, 0.8, 0.4),
                        increment = 2, maxiter = 1000,
-                       quadpoint = 15) {
+                       quadpoint = 15,
+                       exact.obs = 0) {
   
-  data <- SimJMdata(seed = seed + i, n = n, phi = phi,
+  data <- SimJMdata(seed = seed + i, n = n,
                     nc = nc,
                     covbw = covbw,
                     lambda = lambda, lambdaC = lambdaC,
                     Cmin = Cmin,
                     Cmax = Cmax,
+                    CL = CL,
+                    CU = CU,
                     gamma = gamma,
                     alpha = alpha,
                     beta = beta,
                     tau = tau,
-                    increment = increment)
+                    increment = increment,
+                    exact.obs = exact.obs)
   
   Ydata <- data$Ydata
   Sdata <- data$Sdata
