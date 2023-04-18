@@ -1,12 +1,14 @@
 ##' @export
 ##' 
 
-SimJMdata <- function(seed = 99, n = 100, phi = 0.04,
+SimJMdata <- function(seed = 99, n = 100,
                       nc = 100,
                       covbw = matrix(c(1, 0.1, 0.1, 0.5), nrow = 2, ncol = 2),
                       lambda = 0.3, lambdaC = 0.05,
                       Cmin = 1,
                       Cmax = 5,
+                      CL = 5,
+                      CU = 10,
                       gamma = c(-0.05, 0.2, -0.1),
                       alpha = c(0.5, -0.5),
                       beta = c(5, 1, 2, -3, 3),
@@ -63,16 +65,11 @@ SimJMdata <- function(seed = 99, n = 100, phi = 0.04,
   X2 <- rnorm(n, mean = 1, sd = 2)
   Xsurv <- cbind(Sdata$Si, X1, X2)
   Ti <- vector()
-  Ci <- vector()
-  
+  Ci <- runif(n, min = CL, max = CU)
   for (i in 1:n) {
-    Ti[i] <- 0
-    Ci[i] <- 0
-    while (Ti[i] <= (Sdata$Ri[i] - Sdata$Si[i]) || Ti[i] >= 30) {
-      Ti[i] <- rexp(1, rate = lambda*exp(Xsurv[i, ]%*%gamma + bwi[i, ]%*%alpha))
-    }
-    while (Ci[i] <= (Sdata$Ri[i] - Sdata$Si[i]) || Ci[i] >= 30) {
-      Ci[i] <- rexp(1, rate = lambdaC)
+    Ti[i] <- 30
+    while (Ti[i] >= 30) {
+      Ti[i] <- Cmax + rexp(1, rate = lambda*exp(Xsurv[i, ]%*%gamma + bwi[i, ]%*%alpha))
     }
   }
   

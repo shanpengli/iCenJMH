@@ -15,7 +15,7 @@ GetM <- function(GetEfun, beta, tau, gamma, alpha, Sig, Z, X1, W, Y, X2,
     phi <- dplyr::left_join(phi, iCen.observed, by = colnames(phi)[1])
     phi[, 3] <- Psl[, 3]
     phi <- phi[order(-phi[, 2]), ]
-    phi <- phi[phi$iCen.observed, ]
+    #phi <- phi[phi$iCen.observed, ]
     phi <- as.matrix(phi)
     phi <- GetrisksetS(phi)
     phi <- as.data.frame(phi)

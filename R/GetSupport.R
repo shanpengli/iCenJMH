@@ -24,8 +24,11 @@ GetSupport <- function(iCen.data = NULL, iCen.tL = NULL, iCen.tR = NULL,
   
   iCen.observed <- ifelse(iCen.data[, iCen.tL] < iCen.data[, iCen.tR], TRUE, FALSE)
   
-  UniqueSi <- sort(unique(c(iCen.data[iCen.observed, iCen.tL], 
-                            iCen.data[iCen.observed, iCen.tR])))
+  # UniqueSi <- sort(unique(c(iCen.data[iCen.observed, iCen.tL], 
+  #                           iCen.data[iCen.observed, iCen.tR])))
+  
+  UniqueSi <- sort(unique(c(iCen.data[, iCen.tL], 
+                            iCen.data[, iCen.tR])))
   SupportData <- NULL
   for (i in 1:nrow(iCen.data)) {
     if (iCen.data[i, iCen.tL] < iCen.data[i, iCen.tR]) {

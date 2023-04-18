@@ -1,33 +1,39 @@
 ##' @export
 ##'
 
-simfitRI <- function(sim = 100, seed = 99, n = 100, phi = 0.04,
+simfitRI <- function(sim = 100, seed = 99, n = 100,
                      nc = 100,
                      covbw = matrix(c(0.5, 0.25, 0.25, 0.5), nrow = 2, ncol = 2),
                      lambda = 0.3, lambdaC = 0.05,
                      Cmin = 1,
                      Cmax = 5,
+                     CL = 5,
+                     CU = 10,
                      gamma = c(-0.05, 0.2, -0.1),
                      alpha = c(0.5, -0.5),
                      beta = c(5, 1, 2, -3, 3),
                      tau = c(-0.5, -0.1, -0.2, 0.8, 0.4),
                      increment = 2, maxiter = 1000,
                      quadpoint = 15,
+                     exact.obs = 0,
                      ncores = 10) {
   
   ParaMatrixRaw <- parallel::mclapply(1:sim, bootsfitRI,
-                                      seed = seed, n = n, phi = phi,
+                                      seed = seed, n = n,
                                       nc = nc,
                                       covbw = covbw,
                                       lambda = lambda, lambdaC = lambdaC,
                                       Cmin = Cmin,
                                       Cmax = Cmax,
+                                      CL = CL,
+                                      CU = CU,
                                       gamma = gamma,
                                       alpha = alpha,
                                       beta = beta,
                                       tau = tau,
                                       increment = increment, maxiter = maxiter,
                                       quadpoint = quadpoint,
+                                      exact.obs = exact.obs,
                                       mc.cores = ncores)
   
   paramatrix <- as.data.frame(matrix(0, nrow = sim, ncol = 20))

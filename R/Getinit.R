@@ -153,7 +153,7 @@ Getinit <- function(Tdata = Tdata, Ydata = Ydata, long.formula = long.formula,
   subiCendata <- dplyr::left_join(subiCendata, iCen.observed, by = iCen.info$ID)
   
   subiCendata <- subiCendata[order(-subiCendata[, iCen.info$S]), ]
-  subiCendata <- subiCendata[subiCendata$iCen.observed, ]
+  #subiCendata <- subiCendata[subiCendata$iCen.observed, ]
   
   subiCendata <- as.matrix(subiCendata)
   phi <- GetrisksetS(subiCendata)

@@ -531,6 +531,7 @@ int getGradS(Eigen::Map<Eigen::MatrixXd> & Psl2, const Eigen::Map<Eigen::VectorX
     sumProb = 0;
     if (nt(j) == 1) {
       Psl2(countt, 5) = exp(-Psl2(countt, 4))/(1 - exp(-Psl2(countt, 4)));
+      GradS(j, (Psl2(countt, 6) - 1)) = Psl2(countt, 5);
       countt++;
     } else {
       for (t=0;t<nt(j);t++) {
