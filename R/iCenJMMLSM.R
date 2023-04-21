@@ -147,7 +147,7 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
   # nt <- as.data.frame(table(YS[, iCen.info$ID]))
   nt <- YS %>%
     data.frame() %>%
-    dplyr::group_by_(iCen.info$ID) %>%
+    dplyr::group_by(dplyr::across(iCen.info$ID)) %>%
     dplyr::summarise(n = n())
 
   iCen.observed <- data.frame(unique(YS[, iCen.info$ID]), iCen.info$iCen.observed)
@@ -251,10 +251,14 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
 
         convergence = 1
         
-        GetEfun <- GetE(beta, tau, gamma, alpha, H0, Sig, phi, Z, X1, W, Y,
-                        X2, survtime, status, TID, YID, ni, nt, YS, xsmatrix, wsmatrix,
-                        S, iCen.ID, iCen.wID, pStol, c, hazard.kernel)
+        # GetEfun <- GetE(beta, tau, gamma, alpha, H0, Sig, phi, Z, X1, W, Y,
+        #                 X2, survtime, status, TID, YID, ni, nt, YS, xsmatrix, wsmatrix,
+        #                 S, iCen.ID, iCen.wID, pStol, c, hazard.kernel)
         
+        GetEfun <- GetESE(beta, tau, gamma, alpha, H0, Sig, phi, Z, X1, W, Y,
+                        X2, survtime, status, TID, YID, ni, nt, YS, xsmatrix, wsmatrix,
+                        S, iCen.ID, iCen.wID, pStol)
+
         nt <- as.data.frame(table(YS[, 1]))
         GetfunE <- GetEfunSE(GetEfun, Z, TID, YID, ni, nt, YS, subiCendata)
         

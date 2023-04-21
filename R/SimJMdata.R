@@ -67,10 +67,7 @@ SimJMdata <- function(seed = 99, n = 100,
   Ti <- vector()
   Ci <- runif(n, min = CL, max = CU)
   for (i in 1:n) {
-    Ti[i] <- 30
-    while (Ti[i] >= 30) {
-      Ti[i] <- Cmax + rexp(1, rate = lambda*exp(Xsurv[i, ]%*%gamma + bwi[i, ]%*%alpha))
-    }
+    Ti[i] <- Cmax + rexp(1, rate = lambda*exp(Xsurv[i, ]%*%gamma + bwi[i, ]%*%alpha))
   }
   
   survtimeraw <- cbind(Ti, Ci)
@@ -111,11 +108,7 @@ SimJMdata <- function(seed = 99, n = 100,
     suby[1, 2] <- beta[1] + beta[2]*Xlong[i, 1] + beta[3]*ti1 + 
       beta[4]*Xlong[i, 2] + beta[5]*Xlong[i, 3] + bwi[i, 1]
     epsilon <- rnorm(1, mean = 0, sd = sd)
-    while (abs(epsilon) > 50) {
-      epsilon <- rnorm(1, mean = 0, sd = sd)
-    }
     suby[1, 2] <- suby[1, 2] + epsilon
-      
     suby[1, 3] <- Sdata[i, 3]
     if (ni == 0) {
       colnames(suby) <- c("ID", "Yij", "Oij", "tij")
@@ -128,9 +121,6 @@ SimJMdata <- function(seed = 99, n = 100,
         suby[j+1, 2] <- beta[1] + beta[2]*Xlong[i, 1] + beta[3]*tij + 
           beta[4]*Xlong[i, 2] + beta[5]*Xlong[i, 3] + bwi[i, 1]
         epsilon <- rnorm(1, mean = 0, sd = sd)
-        while (abs(epsilon) > 50) {
-          epsilon <- rnorm(1, mean = 0, sd = sd)
-        }
         suby[j+1, 2] <- suby[j+1, 2] + epsilon
         suby[j+1, 3] <- Sdata[i, 3] + j*increment
       }

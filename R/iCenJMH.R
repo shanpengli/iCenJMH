@@ -5,7 +5,7 @@
 #' @importFrom utils  read.table
 #' @importFrom survival coxph
 #' @importFrom parallel mclapply parLapply makeCluster stopCluster
-#' @importFrom dplyr left_join summarise group_by_
+#' @importFrom dplyr left_join summarise n across group_by
 #' @importFrom MASS mvrnorm
 #' @importFrom nlme lme getVarCov lmeControl
 #' @importFrom magrittr %>%
