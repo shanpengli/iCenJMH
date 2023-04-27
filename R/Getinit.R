@@ -46,7 +46,7 @@ Getinit <- function(Tdata = Tdata, Ydata = Ydata, long.formula = long.formula,
     resid <- resid(longfit)
     logResidsquare <- as.vector(log(resid^2))
     
-    var.init.formula <- c(iCen.info$S, "T.aft.S", variance)
+    var.init.formula <- c(iCen.info$S, "Ytime.aft.S", variance)
     W <- as.matrix(data.frame(1, YdataS[, var.init.formula]))
     
     Tau <- OLS(W, logResidsquare)
