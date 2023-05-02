@@ -22,7 +22,7 @@ Getinit <- function(Tdata = Tdata, Ydata = Ydata, long.formula = long.formula,
   TdataS <- dplyr::left_join(Tdata, Impute.Sdata, by = ID)
     
   ## obtain initial guess for the parameters in the longitudinal sub-model
-  YdataS$Ytime.aft.S <- YdataS[, timeVar] - YdataS[, iCen.info$S]
+  YdataS$Ytime.aft.S <- unlist(YdataS[, timeVar] - YdataS[, iCen.info$S])
   longVar <- long[-1]
   long.init.formula <- as.formula(paste(long.formula[2], 
                                         paste(c(iCen.info$S, "Ytime.aft.S", longVar), 

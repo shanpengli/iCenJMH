@@ -4,10 +4,10 @@
 
 //
 // [[Rcpp::export]]
-int getHazard(const Eigen::Map<Eigen::VectorXd> & CumuH0,
-              const Eigen::Map<Eigen::VectorXd> & survtime,
-              const Eigen::Map<Eigen::VectorXd> & status,
-              const Eigen::Map<Eigen::MatrixXd> & H0,
+int getHazard(const Eigen::VectorXd & CumuH0,
+              const Eigen::VectorXd & survtime,
+              const Eigen::VectorXd & status,
+              const Eigen::MatrixXd & H0,
               Eigen::Map<Eigen::VectorXd> & CUH0,
               Eigen::Map<Eigen::VectorXd> & HAZ0) {
   

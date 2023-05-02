@@ -15,7 +15,7 @@ print.iCenJMMLSM <- function(x, digits = 4, ...) {
   cat("Data Summary:\n")
   cat("Number of observations:", nrow(x$Ydata), "\n")
   cat("Number of groups:", nrow(x$Tdata), "\n\n")
-  cat("Proportion of events:", round(x$PropComp[2, 2]/nrow(Tdata)*100, 2), "%\n")
+  cat("Proportion of events:", round(x$PropComp[2, 2]/nrow(x$Tdata)*100, 2), "%\n")
   cat("\nNumerical intergration:\n")
   cat("Method: Standard Guass-Hermite quadrature\n")
   cat("Number of quadrature points: ", x$quadpoint, "\n")

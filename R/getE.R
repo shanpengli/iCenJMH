@@ -33,7 +33,7 @@ GetE <- function(beta, tau, gamma, alpha, H0, Sig, phi, Z, X1, W, Y,
   b = c*H0[nrow(H0),1]/(8*nrow(H0)^0.2)
   uncensoredsurvtime <- cbind(survtime, status)
   uncensoredsurvtime <- uncensoredsurvtime[uncensoredsurvtime[, 2] == 1, ]
-  uncensoredsurvtime <- uncensoredsurvtime[order(uncensoredsurvtime[, 1]), ]
+  uncensoredsurvtime <- unique(uncensoredsurvtime[order(uncensoredsurvtime[, 1]), ])
   for (i in 1:nrow(uncensoredsurvtime)) {
     x <- as.numeric(abs(rep(uncensoredsurvtime[i, 1], nrow(H0)) - H0[, 1])/b <= 1)
     if (hazard.kernel == "Epanechnikov") {
