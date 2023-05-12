@@ -5,10 +5,6 @@ GetrisksetC <- function(cdata) {
     .Call(`_iCenJMH_GetrisksetC`, cdata)
 }
 
-GetrisksetCSF <- function(cdata) {
-    .Call(`_iCenJMH_GetrisksetCSF`, cdata)
-}
-
 GetrisksetS <- function(iCendata) {
     .Call(`_iCenJMH_GetrisksetS`, iCendata)
 }
@@ -57,16 +53,8 @@ GetSE <- function(nbeta, ntau, nSig, ngamma, nalpha, Cov) {
     .Call(`_iCenJMH_GetSE`, nbeta, ntau, nSig, ngamma, nalpha, Cov)
 }
 
-getCovSF <- function(beta, tau, gamma1, alpha1, vee1, H01, Sig, Z, X1, W, Y, X2, survtime, cmprsk, mdata, mdataS, FUNENW, FUNBENW, FUNBS, FUNBW, FUNWS, FUNBSENW, FUNEC, FUNBEC, FUNBSEC, FUNWEC, FUNWSEC, FUNB, FUNW) {
-    .Call(`_iCenJMH_getCovSF`, beta, tau, gamma1, alpha1, vee1, H01, Sig, Z, X1, W, Y, X2, survtime, cmprsk, mdata, mdataS, FUNENW, FUNBENW, FUNBS, FUNBW, FUNWS, FUNBSENW, FUNEC, FUNBEC, FUNBSEC, FUNWEC, FUNWSEC, FUNB, FUNW)
-}
-
 getEC <- function(beta, tau, gamma, alpha, H0Y, Sig, X1, Z, W, Y, X2, survtime, status, ni, nt, xsmatrix, wsmatrix, pSLR, Psl, FUNENW, FUNEBNW, FUNEBSNW, FUNE, FUNBW, FUNBWE, FUNBWSE, FUNBWS, pStol) {
     .Call(`_iCenJMH_getEC`, beta, tau, gamma, alpha, H0Y, Sig, X1, Z, W, Y, X2, survtime, status, ni, nt, xsmatrix, wsmatrix, pSLR, Psl, FUNENW, FUNEBNW, FUNEBSNW, FUNE, FUNBW, FUNBWE, FUNBWSE, FUNBWS, pStol)
-}
-
-getECSF <- function(beta, tau, gamma1, alpha1, vee1, H01, Sig, Z, X1, W, Y, X2, survtime, cmprsk, mdata, mdataS, xsmatrix, wsmatrix, CUH01, HAZ01) {
-    .Call(`_iCenJMH_getECSF`, beta, tau, gamma1, alpha1, vee1, H01, Sig, Z, X1, W, Y, X2, survtime, cmprsk, mdata, mdataS, xsmatrix, wsmatrix, CUH01, HAZ01)
 }
 
 getGradT <- function(gamma, alpha, H0, X2, survtime, status, ni, nt, PslT, FUNE, FUNBW, FUNBWE) {
@@ -85,15 +73,7 @@ getHazard <- function(CumuH0, survtime, status, H0, CUH0, HAZ0) {
     .Call(`_iCenJMH_getHazard`, CumuH0, survtime, status, H0, CUH0, HAZ0)
 }
 
-getHazardSF <- function(CumuH01, survtime, cmprsk, H01, CUH01, HAZ01) {
-    .Call(`_iCenJMH_getHazardSF`, CumuH01, survtime, cmprsk, H01, CUH01, HAZ01)
-}
-
 getMC <- function(beta, tau, gamma, alpha, H0, Sig, Z, X1, W, Y, X2, survtime, status, ni, nt, Psl, PslT, FUNENW, FUNEBNW, FUNEBSNW, FUNE, FUNBW, FUNBWE, FUNBWSE, FUNBWS, pStol) {
     .Call(`_iCenJMH_getMC`, beta, tau, gamma, alpha, H0, Sig, Z, X1, W, Y, X2, survtime, status, ni, nt, Psl, PslT, FUNENW, FUNEBNW, FUNEBSNW, FUNE, FUNBW, FUNBWE, FUNBWSE, FUNBWS, pStol)
-}
-
-getMCSF <- function(beta, tau, gamma1, alpha1, vee1, H01, Sig, Z, X1, W, Y, X2, survtime, cmprsk, mdata, mdataS, FUNENW, FUNBENW, FUNBS, FUNBW, FUNWS, FUNBSENW, FUNEC, FUNBEC, FUNBSEC, FUNWEC, FUNWSEC, FUNB, FUNW) {
-    .Call(`_iCenJMH_getMCSF`, beta, tau, gamma1, alpha1, vee1, H01, Sig, Z, X1, W, Y, X2, survtime, cmprsk, mdata, mdataS, FUNENW, FUNBENW, FUNBS, FUNBW, FUNWS, FUNBSENW, FUNEC, FUNBEC, FUNBSEC, FUNWEC, FUNWSEC, FUNB, FUNW)
 }
 

@@ -6,7 +6,7 @@
 // [[Rcpp::export]]
 Rcpp::List GetrisksetC(const Eigen::MatrixXd & cdata) {
   
-  int k = cdata.rows();
+  int k=cdata.rows();
   int a=0;
   double u=0;
   int i,j;
