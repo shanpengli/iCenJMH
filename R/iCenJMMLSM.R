@@ -12,6 +12,7 @@
 ##' For example, fitting a random intercept model takes the form ~ 1|ID.
 ##' Alternatively. Fitting a random intercept and slope model takes the form ~ x1 + ... + xn|ID.
 ##' @param timeVar a string of an interval-censored time covariate.
+##' @param int.time.Var a string of an time-dependent covariate that interacts with an interval-censored time covariate.
 ##' @param maxiter the maximum number of iterations of the EM algorithm that the function will perform. Default is 10000.
 ##' @param epsilon Tolerance parameter for parametric components. Default is 0.0001.
 ##' @param pStol Tolerance parameter for the posterior probability of an initial event time Si. 
@@ -31,6 +32,7 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
                        variance.formula = NULL,
                        random = NULL,
                        timeVar = NULL,
+                       int.time.Var = NULL,
                        iCen.info = NULL,
                        maxiter = 1000, 
                        epsilon = 1e-04,
@@ -96,10 +98,15 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
     Fakename <- which(variance %in% ynames == FALSE)
     stop(paste0("The WS variables ", long[Fakename], " not found.\n"))
   }
+  if (!is.null(int.time.Var)) {
+    if (!(int.time.Var %in% ynames)) {
+      stop(paste0("The interacting variable ", int.time.Var, " not found.\n"))
+    }
+  }
 
   getinit <- Getinit(Tdata = Tdata, Ydata = Ydata, long.formula = long.formula,
                      surv.formula = surv.formula, variance.formula = variance.formula,
-                     model = model, RE = RE, random = random, timeVar = timeVar,
+                     model = model, RE = RE, random = random, timeVar = timeVar, int.time.Var = int.time.Var,
                      initial.para = initial.para, iCen.info = iCen.info)
   
   
@@ -321,8 +328,15 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
         survival <- all.vars(surv.formula)
         variance <- all.vars(variance.formula)
         
-        names(beta) <- c("(Intercept)", iCen.info$S, "Ytime.aft.S", long[-1])
-        names(tau) <- c("(Intercept)", iCen.info$S, "Ytime.aft.S", variance)
+        if (!is.null(int.time.Var)) {
+          int.time.Var <- paste("Ytime.aft.S", int.time.Var, sep = ":")
+          names(beta) <- c("(Intercept)", iCen.info$S, "Ytime.aft.S", long[-1], int.time.Var)
+          names(tau) <- c("(Intercept)", iCen.info$S, "Ytime.aft.S", variance, int.time.Var)
+        } else {
+          names(beta) <- c("(Intercept)", iCen.info$S, "Ytime.aft.S", long[-1])
+          names(tau) <- c("(Intercept)", iCen.info$S, "Ytime.aft.S", variance)
+        }
+
         names(gamma) <- c(iCen.info$S, survival[-c(1:2)])
 
         PropComp <- as.data.frame(table(Tdata[, survival[2]]))

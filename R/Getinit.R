@@ -1,7 +1,7 @@
 Getinit <- function(Tdata = Tdata, Ydata = Ydata, long.formula = long.formula,
                     surv.formula = surv.formula, variance.formula = variance.formula,
                     model = model, RE = RE, random = random, timeVar = timeVar,
-                    initial.para = initial.para, iCen.info = iCen.info) {
+                    int.time.Var = int.time.Var, initial.para = initial.para, iCen.info = iCen.info) {
   
   long <- all.vars(long.formula)
   survival <- all.vars(surv.formula)
@@ -24,9 +24,19 @@ Getinit <- function(Tdata = Tdata, Ydata = Ydata, long.formula = long.formula,
   ## obtain initial guess for the parameters in the longitudinal sub-model
   YdataS$Ytime.aft.S <- unlist(YdataS[, timeVar] - YdataS[, iCen.info$S])
   longVar <- long[-1]
-  long.init.formula <- as.formula(paste(long.formula[2], 
-                                        paste(c(iCen.info$S, "Ytime.aft.S", longVar), 
-                                               collapse = "+"), sep = "~"))
+  if (!is.null(int.time.Var)) {
+    YdataS$int.time.Var <- YdataS$Ytime.aft.S*YdataS[, int.time.Var]
+    colnames(YdataS)[ncol(YdataS)] <- paste("Ytime.aft.S", int.time.Var, sep = ":")
+    long.init.formula <- as.formula(paste(long.formula[2], 
+                                          paste(c(iCen.info$S, "Ytime.aft.S", longVar,
+                                                  colnames(YdataS)[ncol(YdataS)]), 
+                                                collapse = "+"), sep = "~"))
+  } else {
+    long.init.formula <- as.formula(paste(long.formula[2], 
+                                          paste(c(iCen.info$S, "Ytime.aft.S", longVar),
+                                                collapse = "+"), sep = "~"))
+  }
+
   longfit <- nlme::lme(fixed = long.init.formula, random = random, data = YdataS, method = "REML", 
                         control = nlme::lmeControl(opt = "optim"))
     
@@ -46,7 +56,12 @@ Getinit <- function(Tdata = Tdata, Ydata = Ydata, long.formula = long.formula,
     resid <- resid(longfit)
     logResidsquare <- as.vector(log(resid^2))
     
-    var.init.formula <- c(iCen.info$S, "Ytime.aft.S", variance)
+    if (!is.null(int.time.Var)) {
+      var.init.formula <- c(iCen.info$S, "Ytime.aft.S", variance, colnames(YdataS)[ncol(YdataS)])
+    } else {
+      var.init.formula <- c(iCen.info$S, "Ytime.aft.S", variance)
+    }
+
     W <- as.matrix(data.frame(1, YdataS[, var.init.formula]))
     
     Tau <- OLS(W, logResidsquare)
@@ -95,11 +110,18 @@ Getinit <- function(Tdata = Tdata, Ydata = Ydata, long.formula = long.formula,
                                                  iCen.info$weight.ID)], by = ID)
   Ydata <- Ydata[order(Ydata[, ID], Ydata[, iCen.info$weight.ID]), ]
   Ydata$Ytime.aft.S <- Ydata[, timeVar] - Ydata[, iCen.info$S]
-  ##Ydata <- Ydata[, c(ID, iCen.info$weight.ID, long[1], iCen.info$S, "Ytime.aft.S", longVar, iCen.info$weight)]
-  X1 <- as.matrix(cbind(1, Ydata[, c(iCen.info$S, "Ytime.aft.S", longVar)]))
-  W <- as.matrix(cbind(1, Ydata[, c(iCen.info$S, "Ytime.aft.S", variance)]))
-  
-  WSfmla <- c(iCen.info$S, "Ytime.aft.S", variance) 
+  if (!is.null(int.time.Var)) {
+    Ydata$int.time.Var <- Ydata$Ytime.aft.S*Ydata[, int.time.Var]
+    colnames(Ydata)[ncol(Ydata)] <- paste("Ytime.aft.S", int.time.Var, sep = ":")
+    X1 <- as.matrix(cbind(1, Ydata[, c(iCen.info$S, "Ytime.aft.S", longVar, colnames(Ydata)[ncol(Ydata)])]))
+    W <- as.matrix(cbind(1, Ydata[, c(iCen.info$S, "Ytime.aft.S", variance, colnames(Ydata)[ncol(Ydata)])]))
+    WSfmla <- c(iCen.info$S, "Ytime.aft.S", variance, colnames(Ydata)[ncol(Ydata)]) 
+  } else {
+    X1 <- as.matrix(cbind(1, Ydata[, c(iCen.info$S, "Ytime.aft.S", longVar)]))
+    W <- as.matrix(cbind(1, Ydata[, c(iCen.info$S, "Ytime.aft.S", variance)]))
+    WSfmla <- c(iCen.info$S, "Ytime.aft.S", variance) 
+  }
+
   WSfmla <- paste(WSfmla, collapse = "+")
   variance.formula <- as.formula(paste("log(sigma^2)", WSfmla, sep = "~"))
   

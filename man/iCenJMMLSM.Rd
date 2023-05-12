@@ -12,6 +12,7 @@ iCenJMMLSM(
   variance.formula = NULL,
   random = NULL,
   timeVar = NULL,
+  int.time.Var = NULL,
   iCen.info = NULL,
   maxiter = 1000,
   epsilon = 1e-04,
@@ -42,6 +43,8 @@ For example, fitting a random intercept model takes the form ~ 1|ID.
 Alternatively. Fitting a random intercept and slope model takes the form ~ x1 + ... + xn|ID.}
 
 \item{timeVar}{a string of an interval-censored time covariate.}
+
+\item{int.time.Var}{a string of an time-dependent covariate that interacts with an interval-censored time covariate.}
 
 \item{maxiter}{the maximum number of iterations of the EM algorithm that the function will perform. Default is 10000.}
 
