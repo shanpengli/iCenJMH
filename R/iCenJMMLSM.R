@@ -362,8 +362,13 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
                        GetfunE = GetfunE, iter = iter, convergence = convergence,
                        quadpoint = quadpoint, Ydata = Ydata, Tdata = Tdata, PropComp = PropComp, 
                        FunCall_long = FunCall_long, FunCall_longVar = FunCall_longVar, 
-                       FunCall_survival = FunCall_survival, random = random, 
-                       mycall = mycall, iCen.info = iCen.info, hazard.kernel = hazard.kernel, c = c)
+                       FunCall_survival = FunCall_survival, 
+                       long.formula = long.formula,
+                       surv.formula = surv.formula,
+                       variance.formula = variance.formula,
+                       random = random, 
+                       mycall = mycall, iCen.info = iCen.info, hazard.kernel = hazard.kernel, c = c,
+                       epsilon = epsilon, pStol = pStol)
 
         class(result) <- "iCenJMMLSM"
 

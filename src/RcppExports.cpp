@@ -206,6 +206,33 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// getES
+double getES(const Eigen::VectorXd& beta, const Eigen::VectorXd& tau, const Eigen::VectorXd& gamma, const Eigen::VectorXd& alpha, const Eigen::MatrixXd& Sig, Eigen::MatrixXd& Z, Eigen::MatrixXd& X1, Eigen::MatrixXd& W, const Eigen::VectorXd& Y, Eigen::VectorXd& X2, const Eigen::VectorXd& obstime, const Eigen::MatrixXd& xsmatrix, const Eigen::MatrixXd& wsmatrix, const Eigen::VectorXd& pSLR, const Eigen::VectorXd& Si, const Eigen::VectorXd& CH0s, const Eigen::VectorXd& CH0u);
+RcppExport SEXP _iCenJMH_getES(SEXP betaSEXP, SEXP tauSEXP, SEXP gammaSEXP, SEXP alphaSEXP, SEXP SigSEXP, SEXP ZSEXP, SEXP X1SEXP, SEXP WSEXP, SEXP YSEXP, SEXP X2SEXP, SEXP obstimeSEXP, SEXP xsmatrixSEXP, SEXP wsmatrixSEXP, SEXP pSLRSEXP, SEXP SiSEXP, SEXP CH0sSEXP, SEXP CH0uSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type tau(tauSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type gamma(gammaSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type Sig(SigSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd& >::type Z(ZSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd& >::type X1(X1SEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd& >::type W(WSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< Eigen::VectorXd& >::type X2(X2SEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type obstime(obstimeSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type xsmatrix(xsmatrixSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type wsmatrix(wsmatrixSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type pSLR(pSLRSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type Si(SiSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type CH0s(CH0sSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type CH0u(CH0uSEXP);
+    rcpp_result_gen = Rcpp::wrap(getES(beta, tau, gamma, alpha, Sig, Z, X1, W, Y, X2, obstime, xsmatrix, wsmatrix, pSLR, Si, CH0s, CH0u));
+    return rcpp_result_gen;
+END_RCPP
+}
 // getGradT
 Eigen::MatrixXd getGradT(const Eigen::VectorXd& gamma, const Eigen::VectorXd& alpha, const Eigen::MatrixXd& H0, const Eigen::MatrixXd& X2, const Eigen::VectorXd& survtime, const Eigen::VectorXd& status, const Eigen::VectorXd& ni, const Eigen::VectorXd& nt, const Eigen::VectorXd& PslT, const Eigen::VectorXd& FUNE, const Eigen::MatrixXd& FUNBW, const Eigen::MatrixXd& FUNBWE);
 RcppExport SEXP _iCenJMH_getGradT(SEXP gammaSEXP, SEXP alphaSEXP, SEXP H0SEXP, SEXP X2SEXP, SEXP survtimeSEXP, SEXP statusSEXP, SEXP niSEXP, SEXP ntSEXP, SEXP PslTSEXP, SEXP FUNESEXP, SEXP FUNBWSEXP, SEXP FUNBWESEXP) {
@@ -335,6 +362,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_iCenJMH_GetCov", (DL_FUNC) &_iCenJMH_GetCov, 1},
     {"_iCenJMH_GetSE", (DL_FUNC) &_iCenJMH_GetSE, 6},
     {"_iCenJMH_getEC", (DL_FUNC) &_iCenJMH_getEC, 28},
+    {"_iCenJMH_getES", (DL_FUNC) &_iCenJMH_getES, 17},
     {"_iCenJMH_getGradT", (DL_FUNC) &_iCenJMH_getGradT, 12},
     {"_iCenJMH_getGradY", (DL_FUNC) &_iCenJMH_getGradY, 15},
     {"_iCenJMH_getGradS", (DL_FUNC) &_iCenJMH_getGradS, 4},
