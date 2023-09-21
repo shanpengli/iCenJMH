@@ -329,9 +329,9 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
         variance <- all.vars(variance.formula)
         
         if (!is.null(int.time.Var)) {
-          int.time.Var <- paste("Ytime.aft.S", int.time.Var, sep = ":")
-          names(beta) <- c("(Intercept)", iCen.info$S, "Ytime.aft.S", long[-1], int.time.Var)
-          names(tau) <- c("(Intercept)", iCen.info$S, "Ytime.aft.S", variance, int.time.Var)
+          int.time.Var2 <- paste("Ytime.aft.S", int.time.Var, sep = ":")
+          names(beta) <- c("(Intercept)", iCen.info$S, "Ytime.aft.S", long[-1], int.time.Var2)
+          names(tau) <- c("(Intercept)", iCen.info$S, "Ytime.aft.S", variance, int.time.Var2)
         } else {
           names(beta) <- c("(Intercept)", iCen.info$S, "Ytime.aft.S", long[-1])
           names(tau) <- c("(Intercept)", iCen.info$S, "Ytime.aft.S", variance)
@@ -368,7 +368,7 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
                        variance.formula = variance.formula,
                        random = random, 
                        mycall = mycall, iCen.info = iCen.info, hazard.kernel = hazard.kernel, c = c,
-                       epsilon = epsilon, pStol = pStol)
+                       epsilon = epsilon, pStol = pStol, int.time.Var = int.time.Var)
 
         class(result) <- "iCenJMMLSM"
 

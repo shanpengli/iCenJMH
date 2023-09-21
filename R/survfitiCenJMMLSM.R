@@ -76,8 +76,6 @@ survfitiCenJMMLSM <- function(object, seed = 100, Ynewdata = NULL, Tnewdata = NU
   Ydata.variance <- getdum$Ydata.variance
   Tdata2 <- getdum$Tdata
   
-  # Ydata.mean <- Ydata.variance <- Ydata2
-  
   Yvar <- colnames(Ydata.mean)[-1]
   Cvar <- colnames(Tdata2)[-1]
 
@@ -169,8 +167,18 @@ survfitiCenJMMLSM <- function(object, seed = 100, Ynewdata = NULL, Tnewdata = NU
       
       Y <- subNDy.mean[, Yvar[1]]
       X <- subNDy.mean[, Yvar[2:length(Yvar)]]
+      if (!is.null(object$int.time.Var)) {
+        int.index.X <- which(colnames(X) %in% object$int.time.Var) 
+      } else {
+        int.index.X <- 0
+      }
       X <- as.matrix(X)
       W <- subNDy.variance[, -1]
+      if (!is.null(object$int.time.Var)) {
+        int.index.W <- which(colnames(W) %in% object$int.time.Var) 
+      } else {
+        int.index.W <- 0
+      }
       W <- as.matrix(W)
       if (nsig == 2) {
         Z <- matrix(1, ncol = 1, nrow = length(Y))
@@ -181,22 +189,47 @@ survfitiCenJMMLSM <- function(object, seed = 100, Ynewdata = NULL, Tnewdata = NU
       X2 <- as.matrix(subNDc[1, Cvar[3:length(Cvar)]])
       
       ## add space for interval-censored covariates
-      if (nrow(X) == 1) {
-        tX <- matrix(0, nrow = 1, ncol = 1+2+ncol(X)-1)
-        tX[1, 1] <- 1
-        tX[1, (1+2+1):(1+2+ncol(X)-1)] <- X[1, 2:ncol(X)]
-        X <- tX
+      if (is.null(object$int.time.Var)) {
+        if (nrow(X) == 1) {
+          tX <- matrix(0, nrow = 1, ncol = 1+2+ncol(X)-1)
+          tX[1, 1] <- 1
+          tX[1, (1+2+1):(1+2+ncol(X)-1)] <- X[1, 2:ncol(X)]
+          X <- tX
+        } else {
+          X <- cbind(X[, 1], 0, 0, X[, 2:ncol(X)])
+        }
       } else {
-        X <- cbind(X[, 1], 0, 0, X[, 2:ncol(X)])
+        if (nrow(X) == 1) {
+          tX <- matrix(0, nrow = 1, ncol = 1+3+ncol(X)-1)
+          tX[1, 1] <- 1
+          tX[1, (1+2+1):(1+2+ncol(X)-1)] <- X[1, 2:ncol(X)]
+          X <- tX
+        } else {
+          X <- cbind(X[, 1], 0, 0, X[, 2:ncol(X)], 0)
+        }
+        int.index.X <- 3 + int.index.X - 1 
       }
+
       
-      if (nrow(W) == 1) {
-        tW <- matrix(0, nrow = 1, ncol = 1+2+ncol(W)-1)
-        tW[1, 1] <- 1
-        tW[1, (1+2+1):(1+2+ncol(W)-1)] <- W[1, 2:ncol(W)]
-        W <- tW
+      if (is.null(object$int.time.Var)) {
+        if (nrow(W) == 1) {
+          tW <- matrix(0, nrow = 1, ncol = 1+2+ncol(W)-1)
+          tW[1, 1] <- 1
+          tW[1, (1+2+1):(1+2+ncol(W)-1)] <- W[1, 2:ncol(W)]
+          W <- tW
+        } else {
+          W <- cbind(W[, 1], 0, 0, W[, 2:ncol(W)])
+        }
       } else {
-        W <- cbind(W[, 1], 0, 0, W[, 2:ncol(W)])
+        if (nrow(W) == 1) {
+          tW <- matrix(0, nrow = 1, ncol = 1+3+ncol(W)-1)
+          tW[1, 1] <- 1
+          tW[1, (1+2+1):(1+2+ncol(W)-1)] <- W[1, 2:ncol(W)]
+          W <- tW
+        } else {
+          W <- cbind(W[, 1], 0, 0, W[, 2:ncol(W)], 0)
+        }
+        int.index.W <- 3 + int.index.W - 1
       }
 
       X2 <- cbind(0, X2)
@@ -204,7 +237,7 @@ survfitiCenJMMLSM <- function(object, seed = 100, Ynewdata = NULL, Tnewdata = NU
       for (jj in 1:lengthu) {
         Predraw[j, jj] <- getES(beta, tau, gamma, alpha, Sig, Z, X, W, Y,
                                 as.vector(X2), subobs.time, xsmatrix, wsmatrix, pSLR, 
-                                piSl[, 1], CH0, CH0u[, jj])
+                                piSl[, 1], CH0, CH0u[, jj], int.index.X, int.index.W)
       }
       
       Pred[[j]] <- data.frame(u, Predraw[j, ])

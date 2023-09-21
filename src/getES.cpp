@@ -17,7 +17,9 @@ double getES(const Eigen::VectorXd & beta, const Eigen::VectorXd & tau,
              const Eigen::VectorXd & pSLR, 
              const Eigen::VectorXd & Si,
              const Eigen::VectorXd & CH0s,
-             const Eigen::VectorXd & CH0u){ 
+             const Eigen::VectorXd & CH0u,
+             const double indexX,
+             const double indexW){ 
   
   //calculate the square root of random effect covariance matrix 
   Eigen::JacobiSVD<Eigen::MatrixXd> svd(Sig, Eigen::ComputeThinU | Eigen::ComputeThinV);
@@ -45,6 +47,8 @@ double getES(const Eigen::VectorXd & beta, const Eigen::VectorXd & tau,
   alphaw = alpha(p1a);
   
   int nt=pSLR.size();
+  int pbeta = X1.cols();
+  int ptau = W.cols();
   
   double S=0;
   double dem=0;
@@ -55,6 +59,12 @@ double getES(const Eigen::VectorXd & beta, const Eigen::VectorXd & tau,
       obstimet(i) = obstime(i) - Si(t);
       X1(i,1) = Si(t);
       W(i,1) = Si(t);
+      if (indexX != 0) {
+        X1(i,pbeta - 1) = obstimet(i)*X1(i,indexX - 1);
+      }
+      if (indexW != 0) {
+        W(i,ptau - 1) = obstimet(i)*W(i,indexW - 1);
+      }
     }
     X1.col(2) = obstimet;
     W.col(2) = obstimet;
