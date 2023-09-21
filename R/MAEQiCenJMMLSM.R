@@ -53,6 +53,7 @@ MAEQiCenJMMLSM <- function(seed = 100, object, landmark.time = NULL, horizon.tim
   ID <- random[length(random)]
   iCen.info <- object$iCen.info
   Sdata <- unique(iCen.info$iCen.data[, c(ID, iCen.info$iCen.tL, iCen.info$iCen.tR)])
+  int.time.Var <- object$int.time.Var
   
   folds <- caret::groupKFold(c(1:nrow(Tdata)), k = n.cv)
   MAEQ.cv <- list()
@@ -78,7 +79,8 @@ MAEQiCenJMMLSM <- function(seed = 100, object, landmark.time = NULL, horizon.tim
                           initial.para = FALSE,
                           pStol = object$pStol,
                           c = object$c,
-                          hazard.kernel = object$hazard.kernel), silent = TRUE)
+                          hazard.kernel = object$hazard.kernel,
+                          int.time.Var = int.time.Var), silent = TRUE)
     
     writeLines(paste0("The ", t, " th training is done!"))
     
