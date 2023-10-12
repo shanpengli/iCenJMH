@@ -12,6 +12,7 @@ MAEQmidpointJMMLSM <- function(seed = 100,
                                iCen.tL = NULL, iCen.tR = NULL,
                                landmark.time = NULL, horizon.time = NULL, 
                                obs.time = NULL, 
+                               int.time.Var = NULL,
                                datatype = "midpoint",
                                quadpoint = NULL, maxiter = 1000, n.cv = 3, 
                                quantile.width = 0.25, ...) {
@@ -20,6 +21,11 @@ MAEQmidpointJMMLSM <- function(seed = 100,
     stop("Please specify the landmark.time for dynamic prediction.")   
   if (!is.vector(horizon.time)) 
     stop("horizon.time must be vector typed.")
+  if (!is.null(int.time.Var)) {
+    if (!int.time.Var %in% colnames(Ydata)) {
+      stop(paste(int.time.Var, "does not exist in Ydata."))
+    }
+  }
   if (is.null(obs.time)) {
     stop("Please specify a vector that represents the time variable from Ydata.")
   } else {
@@ -63,10 +69,22 @@ MAEQmidpointJMMLSM <- function(seed = 100,
     train.Tdata <- dplyr::left_join(train.Tdata, data, by = ID)
     train.Tdata$survtime <- train.Tdata[, surv.var[1]] - train.Tdata$Stime
     
-    long.fixed <- paste(c("Stime", "time", long.var[2:length(long.var)]), collapse = "+")
+    if (!is.null(int.time.Var)) {
+      interaction <- paste("time", int.time.Var, sep = ":")
+      long.fixed <- paste(c("Stime", "time", long.var[2:length(long.var)], interaction), collapse = "+")
+    } else {
+      long.fixed <- paste(c("Stime", "time", long.var[2:length(long.var)]), collapse = "+")
+    }
+    
     new.long.formula <- as.formula(paste(long.var[1], long.fixed, sep = "~"))
     
-    long.fixed <- paste(c("Stime", "time", variance.var), collapse = "+")
+    if (!is.null(int.time.Var)) {
+      interaction <- paste("time", int.time.Var, sep = ":")
+      long.fixed <- paste(c("Stime", "time", variance.var, interaction), collapse = "+")
+    } else {
+      long.fixed <- paste(c("Stime", "time", variance.var), collapse = "+")
+    }
+    
     new.var.formula <- as.formula(paste0("~", long.fixed))
     
     surv.fixed <- paste(c("Stime", surv.var[3:length(surv.var)]), collapse = "+")
