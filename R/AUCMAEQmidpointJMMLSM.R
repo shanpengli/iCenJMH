@@ -1,7 +1,7 @@
 ##' @export
 ##' 
 
-MAEQmidpointJMMLSM <- function(seed = 100, 
+AUCMAEQmidpointJMMLSM <- function(seed = 100, 
                                Ydata = NULL,
                                Tdata = NULL,
                                Sdata = NULL,
@@ -15,7 +15,8 @@ MAEQmidpointJMMLSM <- function(seed = 100,
                                int.time.Var = NULL,
                                datatype = "midpoint",
                                quadpoint = NULL, maxiter = 1000, n.cv = 3, 
-                               quantile.width = 0.25, ...) {
+                               quantile.width = 0.25, 
+                               metric = c("MAEQ", "AUC"), ...) {
   
   if (is.null(landmark.time)) 
     stop("Please specify the landmark.time for dynamic prediction.")   
@@ -46,7 +47,7 @@ MAEQmidpointJMMLSM <- function(seed = 100,
   
   folds <- caret::groupKFold(c(1:nrow(Tdata)), k = n.cv)
   MAEQ.cv <- list()
-  
+  AUC.cv <- list()
   data <- Sdata[, c(ID, iCen.tL, iCen.tR)]
   if (datatype == "midpoint") {
     data$Stime <- (data[, iCen.tL] + data[, iCen.tR])/2
@@ -103,8 +104,10 @@ MAEQmidpointJMMLSM <- function(seed = 100,
     if ('try-error' %in% class(fit)) {
       writeLines(paste0("Error occured in the ", t, " th training!"))
       MAEQ.cv[[t]] <- NULL
+      AUC.cv[[t]] <- NULL
     } else if (fit$iter == maxiter) {
       MAEQ.cv[[t]] <- NULL
+      AUC.cv[[t]] <- NULL
     } else {
       writeLines(paste0("The ", t, " th training is done!"))
       val.Tdata <- Tdata[-folds[[t]], ]
@@ -150,49 +153,80 @@ MAEQmidpointJMMLSM <- function(seed = 100,
       if (prod(errormess) == 0) {
         writeLines(paste0("Error occured in the ", t, " th validation!"))
         MAEQ.cv[[t]] <- NULL
+        AUC.cv[[t]] <- NULL
       } else {
-
-        AllSurv <- list()
-        for (j in 1:length(horizon.time)) {
+        
+        if (metric == "MAEQ") {
+          AllSurv <- list()
+          for (j in 1:length(horizon.time)) {
+            Surv <- as.data.frame(matrix(0, nrow = nrow(val.Tdata), ncol = 2))
+            colnames(Surv) <- c("ID", "Surv")
+            Surv$ID <- val.Tdata[, ID]
+            ## extract estimated survival prob
+            for (k in 1:nrow(Surv)) {
+              Surv[k, 2] <- survfit[[k]]$Pred[[1]][j, 2]
+            }
+            Surv <- Surv[!is.nan(Surv$Surv), ]
+            ## group subjects based on survival prob
+            quant <- quantile(Surv$Surv, probs = seq(0, 1, by = quantile.width))
+            EmpiricalSurv <- rep(NA, groups)
+            PredictedSurv <- rep(NA, groups)
+            for (i in 1:groups) {
+              subquant <- Surv[Surv$Surv > quant[i] &
+                                 Surv$Surv <= quant[i+1], c(1, 2)]
+              quantsubdata <- val.Tdata[val.Tdata[, ID] %in% subquant$ID, 2:3]
+              colnames(quantsubdata) <- c("time", "status")
+              fitKM <- survival::survfit(survival::Surv(time, status) ~ 1, data = quantsubdata)
+              fitKM.horizon <- try(summary(fitKM, times = horizon.time[j]), silent = TRUE)
+              if ('try-error' %in% class(fitKM.horizon)) {
+                EmpiricalSurv[i] <- summary(fitKM, times = max(quantsubdata$time))$surv
+              } else {
+                EmpiricalSurv[i] <- summary(fitKM, times = horizon.time[j])$surv
+              }
+              PredictedSurv[i] <-mean(subquant$Surv)
+            }
+            AllSurv[[j]] <- data.frame(EmpiricalSurv, PredictedSurv)
+          }
+          names(AllSurv) <- horizon.time
+          result <- list(AllSurv = AllSurv)
+          
+          MAEQ.cv[[t]] <- result
+        } else if (metric == "AUC") {
           Surv <- as.data.frame(matrix(0, nrow = nrow(val.Tdata), ncol = 2))
           colnames(Surv) <- c("ID", "Surv")
           Surv$ID <- val.Tdata[, ID]
-          ## extract estimated survival prob
-          for (k in 1:nrow(Surv)) {
-            Surv[k, 2] <- survfit[[k]]$Pred[[1]][j, 2]
-          }
-          Surv <- Surv[!is.nan(Surv$Surv), ]
-          ## group subjects based on survival prob
-          quant <- quantile(Surv$Surv, probs = seq(0, 1, by = quantile.width))
-          EmpiricalSurv <- rep(NA, groups)
-          PredictedSurv <- rep(NA, groups)
-          for (i in 1:groups) {
-            subquant <- Surv[Surv$Surv > quant[i] &
-                               Surv$Surv <= quant[i+1], c(1, 2)]
-            quantsubdata <- val.Tdata[val.Tdata[, ID] %in% subquant$ID, 2:3]
-            colnames(quantsubdata) <- c("time", "status")
-            fitKM <- survival::survfit(survival::Surv(time, status) ~ 1, data = quantsubdata)
-            fitKM.horizon <- try(summary(fitKM, times = horizon.time[j]), silent = TRUE)
-            if ('try-error' %in% class(fitKM.horizon)) {
-              EmpiricalSurv[i] <- summary(fitKM, times = max(quantsubdata$time))$surv
-            } else {
-              EmpiricalSurv[i] <- summary(fitKM, times = horizon.time[j])$surv
+          Surv$time <- val.Tdata[, 2]
+          Surv$status <- val.Tdata[, 3]
+          mean.AUC <- matrix(NA, nrow = length(horizon.time), ncol = 1)
+          ## extract estimated Survival probability
+          for (j in 1:length(horizon.time)) {
+            for (k in 1:nrow(Surv)) {
+              Surv[k, 2] <- survfit[[k]]$Pred[[1]][j, 2]
             }
-            PredictedSurv[i] <-mean(subquant$Surv)
+            
+            ROC <- timeROC::timeROC(T = Surv$time, delta = Surv$status,
+                                    weighting = "marginal",
+                                    marker = -Surv$Surv, cause = 1,
+                                    times = horizon.time[j])
+            
+            mean.AUC[j, 1] <- ROC$AUC[2]
           }
-          AllSurv[[j]] <- data.frame(EmpiricalSurv, PredictedSurv)
+          
+          
+          AUC.cv[[t]] <- mean.AUC
+        } else {
+          stop("Please specify one of the following metrics for prediction assessment: MAEQ, AUC.")
         }
-        names(AllSurv) <- horizon.time
-        result <- list(AllSurv = AllSurv)
 
-        MAEQ.cv[[t]] <- result
+
         writeLines(paste0("The ", t, " th validation is done!"))
       }
     }
   }
-  result <- list(MAEQ.cv = MAEQ.cv, n.cv = n.cv, landmark.time = landmark.time,
+  
+  result <- list(MAEQ.cv = MAEQ.cv, AUC.cv = AUC.cv, n.cv = n.cv, landmark.time = landmark.time,
                  horizon.time = horizon.time, quadpoint = quadpoint, 
                  seed = seed)
-  class(result) <- "MAEQmidpointJMMLSM"
+  class(result) <- "AUCMAEQmidpointJMMLSM"
   return(result)
 }
