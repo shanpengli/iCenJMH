@@ -1,6 +1,6 @@
-##' @title Time-dependent AUC  for joint models
-##' @name AUCiCenJMMLSM
-##' @aliases AUCiCenJMMLSM
+##' @title Brier score for joint models
+##' @name BrieriCenJMMLSM
+##' @aliases BrieriCenJMMLSM
 ##' @param seed a numeric value of seed to be specified for cross validation.
 ##' @param object object of class 'iCenJMMLSM'.
 ##' @param landmark.time a numeric value of time for which dynamic prediction starts..
@@ -10,7 +10,6 @@
 ##' @param maxiter the maximum number of iterations of the EM algorithm that the 
 ##' function will perform. Default is 10000.
 ##' @param n.cv number of folds for cross validation. Default is 3.
-##' @param quantile.width a numeric value of width of quantile to be specified. Default is 0.25.
 ##' @param ... Further arguments passed to or from other methods.
 ##' @return a list of matrices with conditional probabilities for subjects.
 ##' @author Shanpeng Li \email{lishanpeng0913@ucla.edu}
@@ -18,9 +17,8 @@
 ##' @export
 ##' 
 
-AUCiCenJMMLSM <- function(seed = 100, object, landmark.time = NULL, horizon.time = NULL, 
-                           obs.time = NULL, quadpoint = NULL, maxiter = 1000, n.cv = 3, 
-                           quantile.width = 0.25, ...) {
+BrieriCenJMMLSM <- function(seed = 100, object, landmark.time = NULL, horizon.time = NULL, 
+                           obs.time = NULL, quadpoint = NULL, maxiter = 1000, n.cv = 3, ...) {
   
   if (!inherits(object, "iCenJMMLSM"))
     stop("Use only with 'iCenJMMLSM' xs.\n")
@@ -55,7 +53,7 @@ AUCiCenJMMLSM <- function(seed = 100, object, landmark.time = NULL, horizon.time
   int.time.Var <- object$int.time.Var
   
   folds <- caret::groupKFold(c(1:nrow(Tdata)), k = n.cv)
-  AUC.cv <- list()
+  Brier.cv <- list()
   for (t in 1:n.cv) {
     
     train.Tdata <- Tdata[folds[[t]], ]
@@ -85,9 +83,9 @@ AUCiCenJMMLSM <- function(seed = 100, object, landmark.time = NULL, horizon.time
     
     if ('try-error' %in% class(fit)) {
       writeLines(paste0("Error occured in the ", t, " th training!"))
-      AUC.cv[[t]] <- NULL
+      Brier.cv[[t]] <- NULL
     } else if (fit$iter == maxiter) {
-      AUC.cv[[t]] <- NULL
+      Brier.cv[[t]] <- NULL
     } else {
       
       val.Tdata <- Tdata[-folds[[t]], ]
@@ -105,6 +103,11 @@ AUCiCenJMMLSM <- function(seed = 100, object, landmark.time = NULL, horizon.time
       val.Tdata <- val.Tdata[val.Tdata[, ID] %in% NewyID, ]
       val.Sdata <- val.Sdata[val.Sdata[, ID] %in% NewyID, ]
       
+      ## fit a Kalplan-Meier estimator
+      New.surv.formula.out <- paste0("survival::Surv(", surv.var[1], ",", 
+                                     surv.var[2], "==0)")
+      New.surv.formula <- as.formula(paste(New.surv.formula.out, 1, sep = "~"))
+      fitKM <- survival::survfit(New.surv.formula, data = val.Tdata)
       
       survfit <- try(survfitiCenJMMLSM(fit, seed = seed, Ynewdata = val.Ydata, 
                                        Tnewdata = val.Tdata, 
@@ -115,40 +118,65 @@ AUCiCenJMMLSM <- function(seed = 100, object, landmark.time = NULL, horizon.time
       
       if ('try-error' %in% class(survfit)) {
         writeLines(paste0("Error occured in the ", t, " th validation!"))
-        AUC.cv[[t]] <- NULL
+        Brier.cv[[t]] <- NULL
       } else {
         
         Surv <- as.data.frame(matrix(0, nrow = nrow(val.Tdata), ncol = 2))
         colnames(Surv) <- c("ID", "Surv")
         Surv$ID <- val.Tdata[, ID]
-        Surv$time <- val.Tdata[, surv.var[1]]
-        Surv$status <- val.Tdata[, surv.var[2]]
-        mean.AUC <- matrix(NA, nrow = length(horizon.time), ncol = 1)
-        
+        Gs <- summary(fitKM, times = landmark.time)$surv
+        mean.Brier <- matrix(NA, nrow = length(horizon.time), ncol = 1)
         for (j in 1:length(horizon.time)) {
-          ## extract estimated survival prob
-          for (k in 1:nrow(Surv)) {
-            Surv[k, 2] <- survfit$Pred[[k]][j, 2]
+          fitKM.horizon <- try(summary(fitKM, times = horizon.time[j]), silent = TRUE)
+          if ('try-error' %in% class(fitKM.horizon)) {
+            mean.Brier[j, 1] <- NA
+          } else {
+            Gu <- fitKM.horizon$surv
+            ## true counting process
+            N1 <- vector()
+            Gt <- vector()
+            W.IPCW <- vector()
+            for (i in 1:nrow(Surv)) {
+              if (val.Tdata[i, surv.var[1]] <= horizon.time[j] && val.Tdata[i, surv.var[2]] == 1) {
+                N1[i] <- 1
+                Gt[i] <- summary(fitKM, times = val.Tdata[i, surv.var[1]])$surv
+              } else {
+                N1[i] <- 0
+                Gt[i] <- NA
+              }
+              
+              if (val.Tdata[i, surv.var[1]] > horizon.time[j]) {
+                W.IPCW[i] <- 1/(Gu/Gs)
+              } else if (val.Tdata[i, surv.var[1]] <= horizon.time[j] && val.Tdata[i, surv.var[2]] == 1) {
+                W.IPCW[i] <- 1/(Gt[i]/Gs)
+              } else {
+                W.IPCW[i] <- NA
+              }
+            }
+            ## extract estimated Survival probability
+            for (k in 1:nrow(Surv)) {
+              Surv[k, 2] <- survfit$Pred[[k]][j, 2]
+            }
+            
+            RAWData.Brier <- data.frame(Surv, N1, W.IPCW)
+            colnames(RAWData.Brier)[1:2] <- c("ID", "Surv")
+            RAWData.Brier$Brier <- RAWData.Brier$W.IPCW*
+              abs(1 - RAWData.Brier$Surv - RAWData.Brier$N1)^2
+            mean.Brier[j, 1] <- sum(RAWData.Brier$Brier, na.rm = TRUE)/nrow(RAWData.Brier)
           }
-          Surv <- Surv[!is.nan(Surv$Surv), ]
           
-          ROC <- timeROC::timeROC(T = Surv$time, delta = Surv$status,
-                                  weighting = "marginal",
-                                  marker = -Surv$Surv, cause = 1,
-                                  times = horizon.time[j])
-          
-          mean.AUC[j, 1] <- ROC$AUC[2]
           
         }
+        Brier.cv[[t]] <- mean.Brier
         
-        AUC.cv[[t]] <- mean.AUC
+        
       }
     }
     writeLines(paste0("The ", t, " th validation is done!"))
   }
-  result <- list(AUC.cv = AUC.cv, n.cv = n.cv, landmark.time = landmark.time,
+  result <- list(Brier.cv = Brier.cv, n.cv = n.cv, landmark.time = landmark.time,
                  horizon.time = horizon.time, quadpoint = quadpoint, 
                  seed = seed)
-  class(result) <- "AUCiCenJMMLSM"
+  class(result) <- "BrieriCenJMMLSM"
   return(result)
 }

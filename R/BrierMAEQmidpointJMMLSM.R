@@ -1,7 +1,7 @@
 ##' @export
 ##' 
 
-AUCMAEQmidpointJMMLSM <- function(seed = 100, 
+BrierMAEQmidpointJMMLSM <- function(seed = 100, 
                                Ydata = NULL,
                                Tdata = NULL,
                                Sdata = NULL,
@@ -16,7 +16,7 @@ AUCMAEQmidpointJMMLSM <- function(seed = 100,
                                datatype = "midpoint",
                                quadpoint = NULL, maxiter = 1000, n.cv = 3, 
                                quantile.width = 0.25, 
-                               metric = c("MAEQ", "AUC"), ...) {
+                               metric = c("MAEQ", "Brier"), ...) {
   
   if (is.null(landmark.time)) 
     stop("Please specify the landmark.time for dynamic prediction.")   
@@ -47,7 +47,7 @@ AUCMAEQmidpointJMMLSM <- function(seed = 100,
   
   folds <- caret::groupKFold(c(1:nrow(Tdata)), k = n.cv)
   MAEQ.cv <- list()
-  AUC.cv <- list()
+  Brier.cv <- list()
   data <- Sdata[, c(ID, iCen.tL, iCen.tR)]
   if (datatype == "midpoint") {
     data$Stime <- (data[, iCen.tL] + data[, iCen.tR])/2
@@ -104,10 +104,10 @@ AUCMAEQmidpointJMMLSM <- function(seed = 100,
     if ('try-error' %in% class(fit)) {
       writeLines(paste0("Error occured in the ", t, " th training!"))
       MAEQ.cv[[t]] <- NULL
-      AUC.cv[[t]] <- NULL
+      Brier.cv[[t]] <- NULL
     } else if (fit$iter == maxiter) {
       MAEQ.cv[[t]] <- NULL
-      AUC.cv[[t]] <- NULL
+      Brier.cv[[t]] <- NULL
     } else {
       writeLines(paste0("The ", t, " th training is done!"))
       val.Tdata <- Tdata[-folds[[t]], ]
@@ -132,6 +132,12 @@ AUCMAEQmidpointJMMLSM <- function(seed = 100,
       val.Tdata <- val.Tdata[, c(ID, surv.var[1:2], "Stime", surv.var[3:length(surv.var)])]
       colnames(val.Tdata)[2] <- "survtime"
       
+      ## fit a Kalplan-Meier estimator
+      New.surv.formula.out <- paste0("survival::Surv(", surv.var[1], ",", 
+                                     surv.var[2], "==0)")
+      New.surv.formula <- as.formula(paste(New.surv.formula.out, 1, sep = "~"))
+      fitKM <- survival::survfit(New.surv.formula, data = val.Tdata)
+      
       survfit <- list()
       errormess <- vector()
       for (i in 1:length(NewyID)) {
@@ -153,7 +159,7 @@ AUCMAEQmidpointJMMLSM <- function(seed = 100,
       if (prod(errormess) == 0) {
         writeLines(paste0("Error occured in the ", t, " th validation!"))
         MAEQ.cv[[t]] <- NULL
-        AUC.cv[[t]] <- NULL
+        Brier.cv[[t]] <- NULL
       } else {
         
         if (metric == "MAEQ") {
@@ -191,31 +197,60 @@ AUCMAEQmidpointJMMLSM <- function(seed = 100,
           result <- list(AllSurv = AllSurv)
           
           MAEQ.cv[[t]] <- result
-        } else if (metric == "AUC") {
+        } else if (metric == "Brier") {
+          
           Surv <- as.data.frame(matrix(0, nrow = nrow(val.Tdata), ncol = 2))
           colnames(Surv) <- c("ID", "Surv")
           Surv$ID <- val.Tdata[, ID]
-          Surv$time <- val.Tdata[, 2]
-          Surv$status <- val.Tdata[, 3]
-          mean.AUC <- matrix(NA, nrow = length(horizon.time), ncol = 1)
-          ## extract estimated Survival probability
+          Gs <- summary(fitKM, times = landmark.time)$surv
+          mean.Brier <- matrix(NA, nrow = length(horizon.time), ncol = 1)
+          mean.MAE <- matrix(NA, nrow = length(horizon.time), ncol = 1)
           for (j in 1:length(horizon.time)) {
-            for (k in 1:nrow(Surv)) {
-              Surv[k, 2] <- survfit[[k]]$Pred[[1]][j, 2]
+            fitKM.horizon <- try(summary(fitKM, times = horizon.time[j]), silent = TRUE)
+            if ('try-error' %in% class(fitKM.horizon)) {
+              mean.Brier[j, 1] <- NA
+              mean.MAE[j, 1] <- NA
+            } else {
+              Gu <- fitKM.horizon$surv
+              ## true counting process
+              N1 <- vector()
+              Gt <- vector()
+              W.IPCW <- vector()
+              for (i in 1:nrow(Surv)) {
+                if (val.Tdata[i, 2] <= horizon.time[j] && val.Tdata[i, 3] == 1) {
+                  N1[i] <- 1
+                  Gt[i] <- summary(fitKM, times = val.Tdata[i, 2])$surv
+                } else {
+                  N1[i] <- 0
+                  Gt[i] <- NA
+                }
+                
+                if (val.Tdata[i, 2] > horizon.time[j]) {
+                  W.IPCW[i] <- 1/(Gu/Gs)
+                } else if (val.Tdata[i, 2] <= horizon.time[j] && val.Tdata[i, 3] == 1) {
+                  W.IPCW[i] <- 1/(Gt[i]/Gs)
+                } else {
+                  W.IPCW[i] <- NA
+                }
+              }
+              ## extract estimated Survival probability
+              for (k in 1:nrow(Surv)) {
+                Surv[k, 2] <- survfit[[k]]$Pred[[1]][j, 2]
+              }
+              
+              RAWData.Brier <- data.frame(Surv, N1, W.IPCW)
+              colnames(RAWData.Brier)[1:2] <- c("ID", "Surv")
+              RAWData.Brier$Brier <- RAWData.Brier$W.IPCW*
+                abs(1 - RAWData.Brier$Surv - RAWData.Brier$N1)^2
+              mean.Brier[j, 1] <- sum(RAWData.Brier$Brier, na.rm = TRUE)/nrow(RAWData.Brier)
             }
             
-            ROC <- timeROC::timeROC(T = Surv$time, delta = Surv$status,
-                                    weighting = "marginal",
-                                    marker = -Surv$Surv, cause = 1,
-                                    times = horizon.time[j])
             
-            mean.AUC[j, 1] <- ROC$AUC[2]
           }
+          Brier.cv[[t]] <- mean.Brier
           
-          
-          AUC.cv[[t]] <- mean.AUC
         } else {
-          stop("Please specify one of the following metrics for prediction assessment: MAEQ, AUC.")
+          stop("Please specify one of the following metrics for prediction assessment: MAEQ, Brier.")
         }
 
 
@@ -224,9 +259,9 @@ AUCMAEQmidpointJMMLSM <- function(seed = 100,
     }
   }
   
-  result <- list(MAEQ.cv = MAEQ.cv, AUC.cv = AUC.cv, n.cv = n.cv, landmark.time = landmark.time,
+  result <- list(MAEQ.cv = MAEQ.cv, Brier.cv = Brier.cv, n.cv = n.cv, landmark.time = landmark.time,
                  horizon.time = horizon.time, quadpoint = quadpoint, 
                  seed = seed)
-  class(result) <- "AUCMAEQmidpointJMMLSM"
+  class(result) <- "BrierMAEQmidpointJMMLSM"
   return(result)
 }

@@ -1,11 +1,11 @@
 ##' @export
 ##' 
 
-summary.AUCMAEQmidpointJMMLSM <- function (object, digits = 3, ...) {
-  if (!inherits(object, "AUCMAEQmidpointJMMLSM"))
-    stop("Use only with 'AUCMAEQmidpointJMMLSM' xs.\n") 
+summary.BrierMAEQmidpointJMMLSM <- function (object, digits = 3, ...) {
+  if (!inherits(object, "BrierMAEQmidpointJMMLSM"))
+    stop("Use only with 'BrierMAEQmidpointJMMLSM' xs.\n") 
   
-  if (is.null(object$MAEQ.cv) && is.null(object$AUC.cv)) {
+  if (is.null(object$MAEQ.cv) && is.null(object$Brier.cv)) {
     stop("The cross validation fails. Please try using a different seed number.")
   } else if (!is.null(object$MAEQ.cv) && length(object$MAEQ.cv) == object$n.cv) {
     if(sum(mapply(is.null, object$MAEQ.cv)) == 0) {
@@ -28,20 +28,20 @@ summary.AUCMAEQmidpointJMMLSM <- function (object, digits = 3, ...) {
       stop("The cross validation fails. Please try using a different seed number.")
     }
   } else {
-    if(length(object$AUC.cv) == object$n.cv && sum(mapply(is.null, object$AUC.cv)) == 0) {
+    if(length(object$Brier.cv) == object$n.cv && sum(mapply(is.null, object$Brier.cv)) == 0) {
       
       sum <- 0
       for (j in 1:object$n.cv) {
-        sum <- sum + object$AUC.cv[[j]]
+        sum <- sum + object$Brier.cv[[j]]
       }
       sum <- sum/object$n.cv
       
-      AUC <- sum[, 1]
-      ExpectedAUC <- data.frame(object$horizon.time, AUC)
-      colnames(ExpectedAUC) <- c("Horizon Time", "AUC")
+      Brier <- sum[, 1]
+      ExpectedBrier <- data.frame(object$horizon.time, Brier)
+      colnames(ExpectedBrier) <- c("Horizon Time", "Brier")
       
-      cat("\nExpected AUC at the landmark time of", object$landmark.time, "\nbased on", object$n.cv, "fold cross validation\n")
-      return(ExpectedAUC)
+      cat("\nExpected Brier score at the landmark time of", object$landmark.time, "\nbased on", object$n.cv, "fold cross validation\n")
+      return(ExpectedBrier)
       
     } else {
       stop("The cross validation fails. Please try using a different seed number.")
