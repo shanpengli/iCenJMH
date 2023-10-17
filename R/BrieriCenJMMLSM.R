@@ -36,9 +36,7 @@ BrieriCenJMMLSM <- function(seed = 100, object, landmark.time = NULL, horizon.ti
       stop(paste0(obs.time, " is not found in Ydata."))
     }
   }
-  groups <- 1/quantile.width
-  if (floor(groups) != groups)
-    stop("The reciprocal of quantile.width must be an integer.")
+
   set.seed(seed)
   Tdata <- object$Tdata
   Ydata <- object$Ydata
