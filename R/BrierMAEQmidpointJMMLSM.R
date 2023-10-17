@@ -133,7 +133,7 @@ BrierMAEQmidpointJMMLSM <- function(seed = 100,
       colnames(val.Tdata)[2] <- "survtime"
       
       ## fit a Kalplan-Meier estimator
-      New.surv.formula.out <- paste0("survival::Surv(", surv.var[1], ",", 
+      New.surv.formula.out <- paste0("survival::Surv(", "survtime", ",", 
                                      surv.var[2], "==0)")
       New.surv.formula <- as.formula(paste(New.surv.formula.out, 1, sep = "~"))
       fitKM <- survival::survfit(New.surv.formula, data = val.Tdata)
