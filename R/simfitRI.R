@@ -14,8 +14,9 @@ simfitRI <- function(sim = 100, seed = 99, n = 100,
                      beta = c(5, 1, 2, -3, 3),
                      tau = c(-0.5, -0.1, -0.2, 0.8, 0.4),
                      increment = 2, maxiter = 1000,
-                     quadpoint = 15,
+                     quadpoint = 6,
                      exact.obs = 0,
+                     method = c("standard", "adaptive"),
                      ncores = 10) {
   
   ParaMatrixRaw <- parallel::mclapply(1:sim, bootsfitRI,
@@ -34,6 +35,7 @@ simfitRI <- function(sim = 100, seed = 99, n = 100,
                                       increment = increment, maxiter = maxiter,
                                       quadpoint = quadpoint,
                                       exact.obs = exact.obs,
+                                      method = method,
                                       mc.cores = ncores)
   
   paramatrix <- as.data.frame(matrix(0, nrow = sim, ncol = 20))

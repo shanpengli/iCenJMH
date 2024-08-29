@@ -21,9 +21,9 @@ Description: Maximum likelihood estimation for the joint modeling of survival an
     is estimated using an Expectation Maximization algorithm.
 License: GPL (>= 3)
 NeedsCompilation: yes
-Imports: Rcpp (>= 1.0.7), survival, dplyr, nlme, mvtnorm
+Imports: Rcpp (>= 1.0.7), dplyr, nlme, mvtnorm, magrittr, timeROC
 LinkingTo: Rcpp, RcppEigen
-Depends: R (>= 3.5.0), MASS, statmod, parallel, utils, stats, magrittr, timeROC
+Depends: R (>= 3.5.0), MASS, statmod, parallel, utils, stats, survival
 RoxygenNote: 7.2.3
 LazyData: true
 Packaged: 2022-04-08 02:16:44 UTC; shanpengli

@@ -150,7 +150,7 @@ survfitiCenJMMLSM <- function(object, seed = 100, Ynewdata = NULL, Tnewdata = NU
       if (nrow(piSl) == 0) {
         Pred[[j]] <- data.frame(u, Predraw[j, ])
         colnames(Pred[[j]]) <- c("times", "PredSurv")
-        Pred[[j]][, 2] <- NaN
+        Pred[[j]][, 2] <- NA
       } else {
         pSLR <- vector()
         phisu <- 0
@@ -159,6 +159,7 @@ survfitiCenJMMLSM <- function(object, seed = 100, Ynewdata = NULL, Tnewdata = NU
           pSLR[sl] <- exp(-phisu)*(1 - exp(-piSl[sl, 3]))/(1-exp(-phisusum))
           phisu <- phisu + piSl[sl, 3]
         }
+        if (length(pSLR) == 1 & is.nan(pSLR[1])) pSLR[1] <- 1
         last.time.minus.sl <- Last.time[j] - piSl[, 1]
         CH0 <- vector()
         for (sl in 1:nrow(piSl)) CH0[sl] <- CH(H0, last.time.minus.sl[sl])
@@ -215,7 +216,6 @@ survfitiCenJMMLSM <- function(object, seed = 100, Ynewdata = NULL, Tnewdata = NU
           int.index.X <- 3 + int.index.X - 1 
         }
         
-        
         if (is.null(object$int.time.Var)) {
           if (nrow(W) == 1) {
             tW <- matrix(0, nrow = 1, ncol = 1+2+ncol(W)-1)
@@ -239,10 +239,67 @@ survfitiCenJMMLSM <- function(object, seed = 100, Ynewdata = NULL, Tnewdata = NU
         
         X2 <- cbind(0, X2)
         
+        ### calculate rescaled quadrature points for aGH
+        if (object$method == "adaptive") {
+          
+          nsig <- ncol(Z) + 1
+          posterior.mode <- matrix(0, nrow = nrow(piSl), ncol = nsig)
+          posterior.var <- matrix(0, nrow = nsig*nrow(piSl), ncol = nsig)
+          
+          for (sl in 1:nrow(piSl)) {
+            
+            if (pSLR[sl] >= pStol) {
+              sl.subobs.time <- subobs.time - piSl[sl, 1]
+              sl.X <- X
+              sl.X[, 2] <- piSl[sl, 1]
+              sl.W <- W
+              sl.W[, 2] <- piSl[sl, 1]
+              if (int.index.X != 0) {
+                sl.X[, nrow(sl.X)] <- sl.subobs.time*sl.X[, int.index.X]
+              }
+              if (int.index.W != 0) {
+                sl.W[, nrow(sl.W)] <- sl.subobs.time*sl.W[, int.index.W]
+              }
+              sl.X[, 3] <- sl.subobs.time
+              sl.W[, 3] <- sl.subobs.time
+              sl.X2 <- X2
+              sl.X2[, 1] <- piSl[sl, 1]
+              sl.Z <- Z
+              
+              if (nsig - 1 >= 2) {
+                if (obs.time %in% bvar1) {
+                  index.time <- which(bvar1 == obs.time)
+                  sl.Z[, index.time] <- sl.subobs.time
+                }
+              }
+
+              sl.CH0 <- CH0[sl]
+              
+              data <- list(Y, sl.X, sl.Z, sl.W, sl.X2, sl.CH0, beta, tau, gamma, alpha, Sig)
+              names(data) <- c("Y", "X", "Z", "W", "X2", "CH0", "beta", "tau", "gamma", "alpha", "Sig")
+              opt <- optim(rep(0, nsig), logLik, data = data, method = "BFGS", hessian = TRUE)
+              posterior.mode[sl, ] <- opt$par
+              posterior.var[(nsig*(sl-1) + 1):(sl*nsig), 1:nsig] <- solve(opt$hessian)
+            } else {
+              next
+            }
+          }
+        }
+        
+        
+        
+        
         for (jj in 1:lengthu) {
-          Predraw[j, jj] <- getES(beta, tau, gamma, alpha, Sig, Z, X, W, Y,
-                                  as.vector(X2), subobs.time, xsmatrix, wsmatrix, pSLR, 
-                                  piSl[, 1], CH0, CH0u[, jj], int.index.X, int.index.W)
+          
+          if (object$method == "adaptive") {
+            Predraw[j, jj] <- getESad(beta, tau, gamma, alpha, Sig, Z, X, W, Y,
+                                      as.vector(X2), subobs.time, xsmatrix, wsmatrix, pSLR, 
+                                      piSl[, 1], CH0, CH0u[, jj], int.index.X, int.index.W, pStol, posterior.mode, posterior.var)
+          } else {
+            Predraw[j, jj] <- getES(beta, tau, gamma, alpha, Sig, Z, X, W, Y,
+                                      as.vector(X2), subobs.time, xsmatrix, wsmatrix, pSLR, 
+                                      piSl[, 1], CH0, CH0u[, jj], int.index.X, int.index.W, pStol)
+          }
         }
         
         Pred[[j]] <- data.frame(u, Predraw[j, ])

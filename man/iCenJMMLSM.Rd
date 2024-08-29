@@ -14,10 +14,11 @@ iCenJMMLSM(
   timeVar = NULL,
   int.time.Var = NULL,
   iCen.info = NULL,
+  method = c("standard", "adaptive"),
   maxiter = 1000,
   epsilon = 1e-04,
   pStol = 1e-06,
-  quadpoint = 10,
+  quadpoint = NULL,
   print.para = FALSE,
   initial.para = TRUE,
   c = 0.95,
@@ -45,6 +46,10 @@ Alternatively. Fitting a random intercept and slope model takes the form ~ x1 + 
 \item{timeVar}{a string of an interval-censored time covariate.}
 
 \item{int.time.Var}{a string of an time-dependent covariate that interacts with an interval-censored time covariate.}
+
+\item{iCen.info}{an object inheriting from class \code{iCen.info.iCenJMMLSM}.}
+
+\item{method}{Method for proceeding numerical integration in the E-step.}
 
 \item{maxiter}{the maximum number of iterations of the EM algorithm that the function will perform. Default is 10000.}
 

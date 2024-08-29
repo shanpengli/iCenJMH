@@ -57,8 +57,16 @@ getEC <- function(beta, tau, gamma, alpha, H0Y, Sig, X1, Z, W, Y, X2, survtime, 
     .Call(`_iCenJMH_getEC`, beta, tau, gamma, alpha, H0Y, Sig, X1, Z, W, Y, X2, survtime, status, ni, nt, xsmatrix, wsmatrix, pSLR, Psl, FUNENW, FUNEBNW, FUNEBSNW, FUNE, FUNBW, FUNBWE, FUNBWSE, FUNBWS, pStol)
 }
 
-getES <- function(beta, tau, gamma, alpha, Sig, Z, X1, W, Y, X2, obstime, xsmatrix, wsmatrix, pSLR, Si, CH0s, CH0u, indexX, indexW) {
-    .Call(`_iCenJMH_getES`, beta, tau, gamma, alpha, Sig, Z, X1, W, Y, X2, obstime, xsmatrix, wsmatrix, pSLR, Si, CH0s, CH0u, indexX, indexW)
+getECad <- function(beta, tau, gamma, alpha, H0Y, Sig, X1, Z, W, Y, X2, survtime, status, ni, nt, xsmatrix, wsmatrix, pSLR, Posbwi, Poscov, Psl, FUNENW, FUNEBNW, FUNEBSNW, FUNE, FUNBW, FUNBWE, FUNBWSE, FUNBWS, pStol) {
+    .Call(`_iCenJMH_getECad`, beta, tau, gamma, alpha, H0Y, Sig, X1, Z, W, Y, X2, survtime, status, ni, nt, xsmatrix, wsmatrix, pSLR, Posbwi, Poscov, Psl, FUNENW, FUNEBNW, FUNEBSNW, FUNE, FUNBW, FUNBWE, FUNBWSE, FUNBWS, pStol)
+}
+
+getES <- function(beta, tau, gamma, alpha, Sig, Z, X1, W, Y, X2, obstime, xsmatrix, wsmatrix, pSLR, Si, CH0s, CH0u, indexX, indexW, pStol) {
+    .Call(`_iCenJMH_getES`, beta, tau, gamma, alpha, Sig, Z, X1, W, Y, X2, obstime, xsmatrix, wsmatrix, pSLR, Si, CH0s, CH0u, indexX, indexW, pStol)
+}
+
+getESad <- function(beta, tau, gamma, alpha, Sig, Z, X1, W, Y, X2, obstime, xsmatrix, wsmatrix, pSLR, Si, CH0s, CH0u, indexX, indexW, pStol, Posbwi, Poscov) {
+    .Call(`_iCenJMH_getESad`, beta, tau, gamma, alpha, Sig, Z, X1, W, Y, X2, obstime, xsmatrix, wsmatrix, pSLR, Si, CH0s, CH0u, indexX, indexW, pStol, Posbwi, Poscov)
 }
 
 getGradT <- function(gamma, alpha, H0, X2, survtime, status, ni, nt, PslT, FUNE, FUNBW, FUNBWE) {

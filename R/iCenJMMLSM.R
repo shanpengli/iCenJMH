@@ -13,6 +13,8 @@
 ##' Alternatively. Fitting a random intercept and slope model takes the form ~ x1 + ... + xn|ID.
 ##' @param timeVar a string of an interval-censored time covariate.
 ##' @param int.time.Var a string of an time-dependent covariate that interacts with an interval-censored time covariate.
+##' @param iCen.info an object inheriting from class \code{iCen.info.iCenJMMLSM}.
+##' @param method Method for proceeding numerical integration in the E-step. 
 ##' @param maxiter the maximum number of iterations of the EM algorithm that the function will perform. Default is 10000.
 ##' @param epsilon Tolerance parameter for parametric components. Default is 0.0001.
 ##' @param pStol Tolerance parameter for the posterior probability of an initial event time Si. 
@@ -34,10 +36,11 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
                        timeVar = NULL,
                        int.time.Var = NULL,
                        iCen.info = NULL,
+                       method = c("standard", "adaptive"),
                        maxiter = 1000, 
                        epsilon = 1e-04,
                        pStol = 1e-6,
-                       quadpoint = 10, print.para = FALSE,
+                       quadpoint = NULL, print.para = FALSE,
                        initial.para = TRUE, c = 0.95,
                        hazard.kernel = c("Epanechnikov", "uniform", "biweight")) {
   
@@ -51,6 +54,14 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
   
   if (!inherits(iCen.info, "iCen.info.iCenJMMLSM")) {
     stop("Use only with 'iCen.info.iCenJMMLSM' objects.\n")
+  }
+  
+  if (method == "adaptive" & is.null(quadpoint)) {
+    quadpoint <- 6
+  }
+  
+  if (method == "standard" & is.null(quadpoint)) {
+    quadpoint <- 20
   }
   
   cnames <- colnames(Tdata)
@@ -184,11 +195,23 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
       print(alpha)
       writeLines("Sig is:")
       print(Sig)
-      }
+    }
+    
+    if (method == "standard") {
+      
+      GetEfun <- GetE(beta, tau, gamma, alpha, H0, Sig, phi, Z, X1, W, Y,
+                      X2, survtime, status, TID, YID, ni, nt, YS, xsmatrix, wsmatrix,
+                      S, iCen.ID, iCen.wID, pStol, c, hazard.kernel)
+      
+    } else {
+      
+      GetEfun <- GetEad(beta, tau, gamma, alpha, H0, Sig, phi, Z, X1, W, Y,
+                        X2, survtime, status, TID, YID, ni, nt, YS, xsmatrix, wsmatrix,
+                        S, iCen.ID, iCen.wID, pStol, c, hazard.kernel)
+      
+    }
 
-    GetEfun <- GetE(beta, tau, gamma, alpha, H0, Sig, phi, Z, X1, W, Y,
-                    X2, survtime, status, TID, YID, ni, nt, YS, xsmatrix, wsmatrix,
-                    S, iCen.ID, iCen.wID, pStol, c, hazard.kernel)
+    
 
     GetMpara <- GetM(GetEfun, beta, tau, gamma, alpha, Sig, Z, X1, W, Y, X2, 
                      survtime, status, TID, YID, ni, nt, YS, subiCendata, 
@@ -202,14 +225,14 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
       H0 <- GetMpara$H0
       phi <- GetMpara$phi
       
-        if((Diff(beta, prebeta, tau, pretau, gamma, pregamma, alpha, prealpha, 
+        if((Diffrelative(beta, prebeta, tau, pretau, gamma, pregamma, alpha, prealpha, 
                  Sig, preSig, H0, preH0, phi, prephi, epsilon) != 1)
             || (iter == maxiter) || (!is.list(GetEfun$AllFUN)) || (!is.list(GetMpara))) {
           break
         }
   }
   
-  if (Diff(beta, prebeta, tau, pretau, gamma, pregamma, alpha, prealpha, 
+  if (Diffrelative(beta, prebeta, tau, pretau, gamma, pregamma, alpha, prealpha, 
            Sig, preSig, H0, preH0, phi, prephi, epsilon) == 2) {
     writeLines("program stops because of numerical issues")
     convergence = 0
@@ -258,13 +281,19 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
 
         convergence = 1
         
-        # GetEfun <- GetE(beta, tau, gamma, alpha, H0, Sig, phi, Z, X1, W, Y,
-        #                 X2, survtime, status, TID, YID, ni, nt, YS, xsmatrix, wsmatrix,
-        #                 S, iCen.ID, iCen.wID, pStol, c, hazard.kernel)
-        
-        GetEfun <- GetESE(beta, tau, gamma, alpha, H0, Sig, phi, Z, X1, W, Y,
-                        X2, survtime, status, TID, YID, ni, nt, YS, xsmatrix, wsmatrix,
-                        S, iCen.ID, iCen.wID, pStol)
+        if (method == "standard") {
+          
+          GetEfun <- GetE(beta, tau, gamma, alpha, H0, Sig, phi, Z, X1, W, Y,
+                          X2, survtime, status, TID, YID, ni, nt, YS, xsmatrix, wsmatrix,
+                          S, iCen.ID, iCen.wID, pStol, c, hazard.kernel)
+          
+        } else {
+          
+          GetEfun <- GetEad(beta, tau, gamma, alpha, H0, Sig, phi, Z, X1, W, Y,
+                            X2, survtime, status, TID, YID, ni, nt, YS, xsmatrix, wsmatrix,
+                            S, iCen.ID, iCen.wID, pStol, c, hazard.kernel)
+          
+        }
 
         nt <- as.data.frame(table(YS[, 1]))
         GetfunE <- GetEfunSE(GetEfun, Z, TID, YID, ni, nt, YS, subiCendata)
@@ -368,7 +397,7 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
                        variance.formula = variance.formula,
                        random = random, 
                        mycall = mycall, iCen.info = iCen.info, hazard.kernel = hazard.kernel, c = c,
-                       epsilon = epsilon, pStol = pStol, int.time.Var = int.time.Var)
+                       epsilon = epsilon, pStol = pStol, int.time.Var = int.time.Var, method = method)
 
         class(result) <- "iCenJMMLSM"
 

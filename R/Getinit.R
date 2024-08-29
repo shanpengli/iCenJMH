@@ -72,14 +72,14 @@ Getinit <- function(Tdata = Tdata, Ydata = Ydata, long.formula = long.formula,
       Sig <- matrix(0, nrow = 2, ncol = 2)
       Sig[1, 1] <- D
       Sig[2, 2] <- 1
-      Sig[1, 2] <- 0.5*D
+      Sig[1, 2] <- 0
       Sig[2, 1] <- Sig[1, 2]
     } else {
       alpha = rep(0, 3)
       Sig <- matrix(0, nrow = 3, ncol = 3)
       Sig[1:2, 1:2] <- D
       Sig[3, 3] <- 1
-      Sig[1:2, 3] <- c(Sig[1, 1], Sig[2, 2])*0.5
+      Sig[1:2, 3] <- 0
       Sig[3, 1:2] <- Sig[1:2, 3] 
     }
   } else {
@@ -125,25 +125,24 @@ Getinit <- function(Tdata = Tdata, Ydata = Ydata, long.formula = long.formula,
   WSfmla <- paste(WSfmla, collapse = "+")
   variance.formula <- as.formula(paste("log(sigma^2)", WSfmla, sep = "~"))
   
+  random.var <- all.vars(random)
   ##random effect covariates
   if (model == "interslope") {
     if (prod(RE %in% ynames) == 0) {
       Fakename <- which(RE %in% ynames == FALSE)
       stop(paste0("The variable ", RE[Fakename], " not found in the longitudinal dataset.\n"))
+    } else if (timeVar == random.var[1]) {
+      Z <- Ydata[, "Ytime.aft.S"]
+      Z <- cbind(1, Z)
+      Z <- as.matrix(Z)
     } else if (prod(RE %in% long) == 0) {
       Fakename <- which(RE %in% long == FALSE)
       stop(paste0("The variable ", RE[Fakename], " not found in the long.formula argument. 
                   Please include this variable in the random argument.\n"))
     } else {
-      if (RE != timeVar) {
-        Z <- Ydata[, RE]
-        Z <- cbind(1, Z)
-        Z <- as.matrix(Z)
-      } else {
-        Z <- Ydata[, "Ytime.aft.S"]
-        Z <- cbind(1, Z)
-        Z <- as.matrix(Z)
-      }
+      Z <- Ydata[, RE]
+      Z <- cbind(1, Z)
+      Z <- as.matrix(Z)
     }
   } else if (model == "intercept") {
     if (!is.null(RE)) {

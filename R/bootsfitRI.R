@@ -14,8 +14,9 @@ bootsfitRI <- function(i, seed = 99, n = 100,
                        beta = c(5, 1, 2, -3, 3),
                        tau = c(-0.5, -0.1, -0.2, 0.8, 0.4),
                        increment = 2, maxiter = 1000,
-                       quadpoint = 15,
-                       exact.obs = 0) {
+                       quadpoint = 6,
+                       exact.obs = 0,
+                       method = c("standard", "adaptive")) {
   
   data <- SimJMdata(seed = seed + i, n = n,
                     nc = nc,
@@ -48,8 +49,8 @@ bootsfitRI <- function(i, seed = 99, n = 100,
                         timeVar = "Oij",
                         iCen.info = iCen.info,
                         maxiter = maxiter, epsilon = 1e-04,
-                        quadpoint = quadpoint, print.para = TRUE,
-                        initial.para = TRUE, hazard.kernel = "Epanechnikov"), silent = FALSE)
+                        quadpoint = quadpoint, print.para = FALSE,
+                        initial.para = TRUE, hazard.kernel = "Epanechnikov", method = method), silent = FALSE)
   b <- proc.time()
   time <- (b - a)[3]
   
