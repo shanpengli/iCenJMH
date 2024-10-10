@@ -147,19 +147,27 @@ survfitiCenJMMLSM <- function(object, seed = 100, Ynewdata = NULL, Tnewdata = NU
       tL <- iCennewdata[iCennewdata[, ID] == yID[j], object$iCen.info$iCen.tL]
       tR <- iCennewdata[iCennewdata[, ID] == yID[j], object$iCen.info$iCen.tR]
       piSl <- phi[phi[, object$iCen.info$S] <= tR & phi[, object$iCen.info$S] > tL, ]
-      if (nrow(piSl) == 0) {
+      if (nrow(piSl) == 0 & tL < tR) {
         Pred[[j]] <- data.frame(u, Predraw[j, ])
         colnames(Pred[[j]]) <- c("times", "PredSurv")
         Pred[[j]][, 2] <- NA
+
       } else {
         pSLR <- vector()
-        phisu <- 0
-        phisusum <- sum(piSl[, 3])
-        for (sl in 1:nrow(piSl)) {
-          pSLR[sl] <- exp(-phisu)*(1 - exp(-piSl[sl, 3]))/(1-exp(-phisusum))
-          phisu <- phisu + piSl[sl, 3]
+        if (tL < tR) {
+          phisu <- 0
+          phisusum <- sum(piSl[, 3])
+          for (sl in 1:nrow(piSl)) {
+            pSLR[sl] <- exp(-phisu)*(1 - exp(-piSl[sl, 3]))/(1-exp(-phisusum))
+            phisu <- phisu + piSl[sl, 3]
+          }
+          if (length(pSLR) == 1 & is.nan(pSLR[1])) pSLR[1] <- 1
+        } else {
+          pSLR[1] <- 1
+          piSl <- matrix(0, nrow = 1, ncol = 3)
+          piSl[, 1] <- tR
         }
-        if (length(pSLR) == 1 & is.nan(pSLR[1])) pSLR[1] <- 1
+
         last.time.minus.sl <- Last.time[j] - piSl[, 1]
         CH0 <- vector()
         for (sl in 1:nrow(piSl)) CH0[sl] <- CH(H0, last.time.minus.sl[sl])

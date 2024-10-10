@@ -10,6 +10,12 @@ GetSupport <- function(iCen.data = NULL, iCen.tL = NULL, iCen.tR = NULL,
                                    iCen.data[, iCen.tR], midpoint)
   colnames(iCen.midpoint.data) <- c(ID, iCen.tL, iCen.tR, S)
   
+  ## right-point regression
+  rightpoint <- iCen.data[, iCen.tR]
+  iCen.rightpoint.data <- data.frame(iCen.data[, ID], iCen.data[, iCen.tL],
+                                   iCen.data[, iCen.tR], rightpoint)
+  colnames(iCen.rightpoint.data) <- c(ID, iCen.tL, iCen.tR, S)
+  
   ## uniform regression
   iCen.uniform.data <- iCen.data
   iCen.uniform.data$iCen.tL <- iCen.data[, iCen.tL]
@@ -52,6 +58,7 @@ GetSupport <- function(iCen.data = NULL, iCen.tL = NULL, iCen.tR = NULL,
                  iCen.tL = iCen.tL, iCen.tR = iCen.tR,
                  iCen.midpoint.data = iCen.midpoint.data,
                  iCen.uniform.data = iCen.uniform.data,
+                 iCen.rightpoint.data = iCen.rightpoint.data,
                  iCen.observed = iCen.observed)
   class(result) <- "iCen.info.iCenJMMLSM"
   return(result)

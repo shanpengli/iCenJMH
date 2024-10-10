@@ -13,7 +13,7 @@ DynPredAcciCenJMMLSM(
   quadpoint = NULL,
   maxiter = 1000,
   n.cv = 3,
-  metric = c("Brier Score", "AUC", "MAPE"),
+  metric = c("Brier Score", "AUC", "Cindex", "MAPE"),
   quantile.width = NULL,
   ...
 )
@@ -37,7 +37,7 @@ function will perform. Default is 10000.}
 \item{n.cv}{number of folds for cross validation. Default is 3.}
 
 \item{metric}{a string to indicate which metric is used. 
-The available options for assessing the prediction accuracy are \code{Brier Score}, \code{AUC}, \code{MAPE}.}
+The available options for assessing the prediction accuracy are \code{Brier Score}, \code{AUC}, \code{Cindex}, \code{MAPE}.}
 
 \item{quantile.width}{a numeric value of width of quantile to be specified if \code{metric} is specified as \code{MAPE}. Default is 0.25.}
 

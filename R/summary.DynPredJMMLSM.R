@@ -1,7 +1,7 @@
-##' @title Print DynPredAcciCenJMMLSM
-##' @name summary.DynPredAcciCenJMMLSM
-##' @aliases summary.DynPredAcciCenJMMLSM
-##' @param object object of class 'DynPredAcciCenJMMLSM'.
+##' @title Print DynPredJMMLSM
+##' @name summary.DynPredJMMLSM
+##' @aliases summary.DynPredJMMLSM
+##' @param object object of class 'DynPredJMMLSM'.
 ##' @param digits number of digits of decimal to be printed. 
 ##' @param ... Further arguments passed to or from other methods.
 ##' @return a list of matrices with conditional probabilities for subjects.
@@ -10,9 +10,9 @@
 ##' @export
 ##' 
 
-summary.DynPredAcciCenJMMLSM <- function (object, digits = 4, ...) {
-  if (!inherits(object, "DynPredAcciCenJMMLSM"))
-    stop("Use only with 'DynPredAcciCenJMMLSM' xs.\n") 
+summary.DynPredJMMLSM <- function (object, digits = 4, ...) {
+  if (!inherits(object, "DynPredJMMLSM"))
+    stop("Use only with 'DynPredJMMLSM' xs.\n") 
   
   if (is.null(object$metric.cv)) {
     stop("The cross validation fails. Please try using a different seed number.")
@@ -49,7 +49,7 @@ summary.DynPredAcciCenJMMLSM <- function (object, digits = 4, ...) {
         for (i in 1:length(object$horizon.time)) {
           for (j in 1:object$n.cv) {
             sum[i, 2] <- sum[i, 2] + mean(abs(object$metric.cv[[j]]$AllSurv[[i]][, 1] - 
-                                               object$metric.cv[[j]]$AllSurv[[i]][, 2])) 
+                                                object$metric.cv[[j]]$AllSurv[[i]][, 2])) 
           }
         }
         sum[, -1] <- sum[, -1]/object$n.cv
@@ -80,7 +80,6 @@ summary.DynPredAcciCenJMMLSM <- function (object, digits = 4, ...) {
           colnames(ExpectedAUC) <- c("Horizon Time", "Cindex")
           cat("\nExpected Cindex at the landmark time of", object$landmark.time, "\nbased on", object$n.cv, "fold cross validation\n")
         }
-        
         return(ExpectedAUC)
       } else {
         stop("The cross validation fails. Please try using a different seed number.")
@@ -88,7 +87,7 @@ summary.DynPredAcciCenJMMLSM <- function (object, digits = 4, ...) {
       
     }
     
-
+    
     
   }
   

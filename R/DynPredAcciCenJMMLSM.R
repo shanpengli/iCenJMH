@@ -11,7 +11,7 @@
 ##' function will perform. Default is 10000.
 ##' @param n.cv number of folds for cross validation. Default is 3.
 ##' @param metric a string to indicate which metric is used. 
-##' The available options for assessing the prediction accuracy are \code{Brier Score}, \code{AUC}, \code{MAPE}.
+##' The available options for assessing the prediction accuracy are \code{Brier Score}, \code{AUC}, \code{Cindex}, \code{MAPE}.
 ##' @param quantile.width a numeric value of width of quantile to be specified if \code{metric} is specified as \code{MAPE}. Default is 0.25.
 ##' @param ... Further arguments passed to or from other methods.
 ##' @return a list of matrices with conditional probabilities for subjects.
@@ -22,7 +22,7 @@
 
 DynPredAcciCenJMMLSM <- function(seed = 100, object, landmark.time = NULL, horizon.time = NULL, 
                             obs.time = NULL, quadpoint = NULL, maxiter = 1000, n.cv = 3, 
-                            metric = c("Brier Score", "AUC", "MAPE"), quantile.width = NULL, ...) {
+                            metric = c("Brier Score", "AUC", "Cindex", "MAPE"), quantile.width = NULL, ...) {
   
   
   if (!inherits(object, "iCenJMMLSM"))
@@ -115,12 +115,6 @@ DynPredAcciCenJMMLSM <- function(seed = 100, object, landmark.time = NULL, horiz
       val.Tdata <- val.Tdata[val.Tdata[, ID] %in% NewyID, ]
       val.Sdata <- val.Sdata[val.Sdata[, ID] %in% NewyID, ]
       
-      ## fit a Kalplan-Meier estimator
-      New.surv.formula.out <- paste0("survival::Surv(", surv.var[1], ",", 
-                                     surv.var[2], "==0)")
-      New.surv.formula <- as.formula(paste(New.surv.formula.out, 1, sep = "~"))
-      fitKM <- survival::survfit(New.surv.formula, data = val.Tdata)
-      
       survfit <- try(survfitiCenJMMLSM(fit, seed = seed, Ynewdata = val.Ydata, 
                                        Tnewdata = val.Tdata, 
                                        iCennewdata = val.Sdata,
@@ -139,6 +133,13 @@ DynPredAcciCenJMMLSM <- function(seed = 100, object, landmark.time = NULL, horiz
           Surv <- as.data.frame(matrix(0, nrow = nrow(val.Tdata), ncol = 2))
           colnames(Surv) <- c("ID", "Surv")
           Surv$ID <- val.Tdata[, ID]
+          
+          ## fit a Kalplan-Meier estimator
+          New.surv.formula.out <- paste0("survival::Surv(", surv.var[1], ",", 
+                                         surv.var[2], "==0)")
+          New.surv.formula <- as.formula(paste(New.surv.formula.out, 1, sep = "~"))
+          fitKM <- survival::survfit(New.surv.formula, data = val.Tdata)
+          
           Gs <- summary(fitKM, times = landmark.time)$surv
           mean.Brier <- matrix(NA, nrow = length(horizon.time), ncol = 1)
           for (j in 1:length(horizon.time)) {
@@ -222,7 +223,7 @@ DynPredAcciCenJMMLSM <- function(seed = 100, object, landmark.time = NULL, horiz
           
           metric.cv[[t]] <- result
           
-        } else if (metric == "AUC") {
+        } else if (metric %in% c("AUC", "Cindex")) {
           
           Surv <- as.data.frame(matrix(0, nrow = nrow(val.Tdata), ncol = 2))
           colnames(Surv) <- c("ID", "Surv")
@@ -236,12 +237,18 @@ DynPredAcciCenJMMLSM <- function(seed = 100, object, landmark.time = NULL, horiz
               Surv[k, 2] <- survfit$Pred[[k]][j, 2]
             }
             
-            ROC <- timeROC::timeROC(T = Surv$time, delta = Surv$status,
-                                    weighting = "marginal",
-                                    marker = -Surv$Surv, cause = 1,
-                                    times = horizon.time[j])
-            
-            mean.AUC[j, 1] <- ROC$AUC[2]
+            if (metric == "AUC") {
+              ROC <- timeROC::timeROC(T = Surv$time, delta = Surv$status,
+                                      weighting = "marginal",
+                                      marker = -Surv$Surv, cause = 1,
+                                      times = horizon.time[j])
+              
+              mean.AUC[j, 1] <- ROC$AUC[2]
+            } else {
+              
+              mean.AUC[j, 1] <- CindexCR(Surv$time, Surv$status, -Surv$Surv, 1)
+              
+            }
             
             
           }
@@ -249,7 +256,7 @@ DynPredAcciCenJMMLSM <- function(seed = 100, object, landmark.time = NULL, horiz
           metric.cv[[t]] <- mean.AUC
           
         } else {
-          stop("Please choose one of the following metrics: Brier Score, AUC, MAPE.")
+          stop("Please choose one of the following metrics: Brier Score, AUC, Cindex, MAPE.")
         }
 
       }
