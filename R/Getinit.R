@@ -41,6 +41,7 @@ Getinit <- function(Tdata = Tdata, Ydata = Ydata, long.formula = long.formula,
                         control = nlme::lmeControl(opt = "optim"))
     
   ## obtain initial guess for the parameters in the survival sub-model
+  TdataS <- as.data.frame(TdataS)
   TdataS$T.aft.S <- TdataS[, survival[1]] - TdataS[, iCen.info$S]
   survfmla.fixed <- c(iCen.info$S, survival[-c(1:2)])
   survfmla.fixed <- paste(survfmla.fixed, collapse = "+")

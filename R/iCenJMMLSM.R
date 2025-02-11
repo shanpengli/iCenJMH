@@ -25,6 +25,7 @@
 ##' @param initial.para Input initial estimate of parameters. Default is FALSE.
 ##' @param c tuning parameter for bandwidth of kernel estimate of hazards.
 ##' @param hazard.kernel a character string of specifying the choice of kernel smoothing method for the hazard rates.
+##' @param con.criteria convergence criteria. Default is \code{abs}, i.e., the absolute difference between the iterates.
 ##' @export
 ##'
 
@@ -42,7 +43,8 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
                        pStol = 1e-6,
                        quadpoint = NULL, print.para = FALSE,
                        initial.para = TRUE, c = 0.95,
-                       hazard.kernel = c("Epanechnikov", "uniform", "biweight")) {
+                       hazard.kernel = c("Epanechnikov", "uniform", "biweight"),
+                       con.criteria = "abs") {
   
   if (!inherits(long.formula, "formula") || length(long.formula) != 3) {
     stop("\nLinear mixed effects model must be a formula of the form \"resp ~ pred\".\n")
@@ -225,15 +227,15 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
       H0 <- GetMpara$H0
       phi <- GetMpara$phi
       
-        if((Diffrelative(beta, prebeta, tau, pretau, gamma, pregamma, alpha, prealpha, 
-                 Sig, preSig, H0, preH0, phi, prephi, epsilon) != 1)
+        if((Diff(beta, prebeta, tau, pretau, gamma, pregamma, alpha, prealpha, 
+                 Sig, preSig, epsilon, con.criteria) != 1)
             || (iter == maxiter) || (!is.list(GetEfun$AllFUN)) || (!is.list(GetMpara))) {
           break
         }
   }
   
-  if (Diffrelative(beta, prebeta, tau, pretau, gamma, pregamma, alpha, prealpha, 
-           Sig, preSig, H0, preH0, phi, prephi, epsilon) == 2) {
+  if (Diff(beta, prebeta, tau, pretau, gamma, pregamma, alpha, prealpha, 
+           Sig, preSig, epsilon, con.criteria) == 2) {
     writeLines("program stops because of numerical issues")
     convergence = 0
     beta <- NULL

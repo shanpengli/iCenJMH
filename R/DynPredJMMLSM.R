@@ -179,20 +179,30 @@ DynPredJMMLSM <- function(seed = 100,
             quant <- quantile(Surv$Surv, probs = seq(0, 1, by = quantile.width))
             EmpiricalSurv <- rep(NA, groups)
             PredictedSurv <- rep(NA, groups)
+            count <- 1
             for (i in 1:groups) {
-              subquant <- Surv[Surv$Surv > quant[i] &
-                                 Surv$Surv <= quant[i+1], c(1, 2)]
-              quantsubdata <- val.Tdata[val.Tdata[, ID] %in% subquant$ID, 2:3]
-              colnames(quantsubdata) <- c("time", "status")
-              fitKM <- survival::survfit(survival::Surv(time, status) ~ 1, data = quantsubdata)
-              fitKM.horizon <- try(summary(fitKM, times = horizon.time[j]), silent = TRUE)
-              if ('try-error' %in% class(fitKM.horizon)) {
-                EmpiricalSurv[i] <- summary(fitKM, times = max(quantsubdata$time))$surv
-              } else {
-                EmpiricalSurv[i] <- summary(fitKM, times = horizon.time[j])$surv
+              if (quant[i] != 1) {
+                count <- count + 1
+                subquant <- Surv[Surv$Surv > quant[i] & 
+                                   Surv$Surv <= quant[i + 1], c(1, 2)]
+                quantsubdata <- val.Tdata[val.Tdata[, 
+                                                    ID] %in% subquant$ID, 2:3]
+                colnames(quantsubdata) <- c("time", "status")
+                fitKM <- survival::survfit(survival::Surv(time, 
+                                                          status) ~ 1, data = quantsubdata)
+                fitKM.horizon <- try(summary(fitKM, times = horizon.time[j]), 
+                                     silent = TRUE)
+                if ("try-error" %in% class(fitKM.horizon)) {
+                  EmpiricalSurv[i] <- summary(fitKM, times = max(quantsubdata$time))$surv
+                }
+                else {
+                  EmpiricalSurv[i] <- summary(fitKM, times = horizon.time[j])$surv
+                }
+                PredictedSurv[i] <- mean(subquant$Surv)
               }
-              PredictedSurv[i] <-mean(subquant$Surv)
             }
+            EmpiricalSurv <- EmpiricalSurv[1:count]
+            PredictedSurv <- PredictedSurv[1:count]
             AllSurv[[j]] <- data.frame(EmpiricalSurv, PredictedSurv)
           }
           names(AllSurv) <- horizon.time

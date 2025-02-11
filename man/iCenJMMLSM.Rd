@@ -22,7 +22,8 @@ iCenJMMLSM(
   print.para = FALSE,
   initial.para = TRUE,
   c = 0.95,
-  hazard.kernel = c("Epanechnikov", "uniform", "biweight")
+  hazard.kernel = c("Epanechnikov", "uniform", "biweight"),
+  con.criteria = "abs"
 )
 }
 \arguments{
@@ -68,6 +69,8 @@ the next probability in the E-step. Default is 1e-6.}
 \item{c}{tuning parameter for bandwidth of kernel estimate of hazards.}
 
 \item{hazard.kernel}{a character string of specifying the choice of kernel smoothing method for the hazard rates.}
+
+\item{con.criteria}{convergence criteria. Default is \code{abs}, i.e., the absolute difference between the iterates.}
 }
 \description{
 Joint modeling of longitudinal continuous data and competing risks

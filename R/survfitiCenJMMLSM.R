@@ -263,10 +263,10 @@ survfitiCenJMMLSM <- function(object, seed = 100, Ynewdata = NULL, Tnewdata = NU
               sl.W <- W
               sl.W[, 2] <- piSl[sl, 1]
               if (int.index.X != 0) {
-                sl.X[, nrow(sl.X)] <- sl.subobs.time*sl.X[, int.index.X]
+                sl.X[, ncol(sl.X)] <- sl.subobs.time*sl.X[, int.index.X]
               }
               if (int.index.W != 0) {
-                sl.W[, nrow(sl.W)] <- sl.subobs.time*sl.W[, int.index.W]
+                sl.W[, ncol(sl.W)] <- sl.subobs.time*sl.W[, int.index.W]
               }
               sl.X[, 3] <- sl.subobs.time
               sl.W[, 3] <- sl.subobs.time

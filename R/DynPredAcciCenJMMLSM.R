@@ -207,14 +207,19 @@ DynPredAcciCenJMMLSM <- function(seed = 100, object, landmark.time = NULL, horiz
                                  Surv$Surv <= quant[i+1], c(1, 2)]
               quantsubdata <- val.Tdata[val.Tdata[, ID] %in% subquant$ID, surv.var]
               colnames(quantsubdata) <- c("time", "status")
-              fitKM <- survival::survfit(survival::Surv(time, status) ~ 1, data = quantsubdata)
-              fitKM.horizon <- try(summary(fitKM, times = horizon.time[j]), silent = TRUE)
-              if ('try-error' %in% class(fitKM.horizon)) {
-                EmpiricalSurv[i] <- summary(fitKM, times = max(quantsubdata$time))$surv
+              fitKM <- try(survival::survfit(survival::Surv(time, status) ~ 1, data = quantsubdata),
+                           silent = TRUE)
+              if ('try-error' %in% class(fitKM)) {
+                EmpiricalSurv[i] <- PredictedSurv[i] <- NA
               } else {
-                EmpiricalSurv[i] <- summary(fitKM, times = horizon.time[j])$surv
+                fitKM.horizon <- try(summary(fitKM, times = horizon.time[j]), silent = TRUE)
+                if ('try-error' %in% class(fitKM.horizon)) {
+                  EmpiricalSurv[i] <- summary(fitKM, times = max(quantsubdata$time))$surv
+                } else {
+                  EmpiricalSurv[i] <- summary(fitKM, times = horizon.time[j])$surv
+                }
+                PredictedSurv[i] <-mean(subquant$Surv)
               }
-              PredictedSurv[i] <-mean(subquant$Surv)
             }
             AllSurv[[j]] <- data.frame(EmpiricalSurv, PredictedSurv)
           }
@@ -246,7 +251,7 @@ DynPredAcciCenJMMLSM <- function(seed = 100, object, landmark.time = NULL, horiz
               mean.AUC[j, 1] <- ROC$AUC[2]
             } else {
               
-              mean.AUC[j, 1] <- CindexCR(Surv$time, Surv$status, -Surv$Surv, 1)
+              mean.AUC[j, 1] <- CindexCR(Surv$time, Surv$status, 1-Surv$Surv, 1)
               
             }
             
