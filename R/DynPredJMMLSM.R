@@ -1,6 +1,3 @@
-##' @export
-##' 
-
 DynPredJMMLSM <- function(seed = 100, 
                                Ydata = NULL,
                                Tdata = NULL,

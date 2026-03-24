@@ -35,23 +35,40 @@ GetSupport <- function(iCen.data = NULL, iCen.tL = NULL, iCen.tR = NULL,
   
   UniqueSi <- sort(unique(c(iCen.data[, iCen.tL], 
                             iCen.data[, iCen.tR])))
-  SupportData <- NULL
-  for (i in 1:nrow(iCen.data)) {
-    if (iCen.data[i, iCen.tL] < iCen.data[i, iCen.tR]) {
-      SL <- iCen.data[i, iCen.tL] < UniqueSi
-      SU <- iCen.data[i, iCen.tR] >= UniqueSi
-      Si <- as.logical(SL*SU)
-      Si <- UniqueSi[Si]
-      subdata <- data.frame(iCen.data[i, ID], Si, 1/length(Si))
-      subdata$wID <- c(1:nrow(subdata))
-      colnames(subdata) <- c(ID, S, weight, weight.ID)
+  
+  n <- nrow(iCen.data)
+  out_list <- vector("list", n)
+  for (i in seq_len(n)) {
+    left  <- iCen.data[[iCen.tL]][i]
+    right <- iCen.data[[iCen.tR]][i]
+    idval <- iCen.data[[ID]][i]
+    
+    if (left < right) {
+      SL <- left < UniqueSi
+      SU <- right >= UniqueSi
+      Si <- UniqueSi[SL & SU]
+      
+      subdata <- data.frame(
+        id_tmp = rep(idval, length(Si)),
+        s_tmp = Si,
+        w_tmp = rep(1 / length(Si), length(Si)),
+        wid_tmp = seq_along(Si)
+      )
     } else {
-      subdata <- data.frame(iCen.data[i, ID], iCen.data[i, iCen.tR], 1)
-      subdata$wID <- c(1:nrow(subdata))
-      colnames(subdata) <- c(ID, S, weight, weight.ID)
+      subdata <- data.frame(
+        id_tmp = idval,
+        s_tmp = right,
+        w_tmp = 1,
+        wid_tmp = 1
+      )
     }
-    SupportData <- rbind(SupportData, subdata)
+    
+    names(subdata) <- c(ID, S, weight, weight.ID)
+    out_list[[i]] <- subdata
   }
+  SupportData <- do.call(rbind, out_list)
+  rownames(SupportData) <- NULL
+  
   iCen.data <- dplyr::left_join(iCen.data, SupportData, by = ID)
   
   result <- list(iCen.data = iCen.data, S = S, weight = weight, ID = ID, weight.ID = weight.ID,

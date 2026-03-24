@@ -87,7 +87,7 @@ DynPredAcciCenJMMLSM <- function(seed = 100, object, landmark.time = NULL, horiz
                           maxiter = maxiter,
                           epsilon = object$epsilon,
                           print.para = FALSE,
-                          con.criteria = "abs",
+                          con.criteria = "relative",
                           pStol = object$pStol,
                           c = object$c,
                           hazard.kernel = object$hazard.kernel,
@@ -255,10 +255,10 @@ DynPredAcciCenJMMLSM <- function(seed = 100, object, landmark.time = NULL, horiz
         }
         metric.cv[[t]][[3]] <- mean.AUC
         metric.cv[[t]][[4]] <- mean.Cindex
+        names(metric.cv[[t]]) <- c("MAPE", "BrierScore", "AUC", "Cindex")
+        writeLines(paste0("The ", t, " th validation is done!"))
       }
     }
-    writeLines(paste0("The ", t, " th validation is done!"))
-    names(metric.cv[[t]]) <- c("MAPE", "BrierScore", "AUC", "Cindex")
   }
   result <- list(metric.cv = metric.cv, n.cv = n.cv, landmark.time = landmark.time,
                  horizon.time = horizon.time, quadpoint = quadpoint, 
