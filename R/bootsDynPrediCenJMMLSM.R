@@ -4,8 +4,7 @@
 bootsDynPrediCenJMMLSM <- function(i = 100, seed = 100, n = 2000, landmark.time = 4,
                                 horizon.time = 5, increment = 0.3, exact.obs = 0,
                                 n.cv = 4, 
-                                datatype = c("midpoint", "rightpoint", "uniform"),
-                                metric = c("Brier Score", "AUC", "MAPE")) {
+                                datatype = c("midpoint", "rightpoint", "uniform")) {
   
   data <- SimJMdata(seed = seed, n = n,
                     nc = 100,
@@ -34,14 +33,14 @@ bootsDynPrediCenJMMLSM <- function(i = 100, seed = 100, n = 2000, landmark.time 
                         timeVar = "Oij",
                         iCen.info = iCen.info,
                         maxiter = 1000, epsilon = 1e-04,
-                        quadpoint = 8, print.para = FALSE,
+                        quadpoint = 5, print.para = FALSE,
                         initial.para = TRUE,
                         pStol = 1e-06, c = 0.95,
                         method = "adaptive",
                         hazard.kernel = "Epanechnikov")
   
   MAEQ <- DynPredAcciCenJMMLSM(seed = seed + i, iCenfit, landmark.time = landmark.time, 
-                         horizon.time = horizon.time, obs.time = "Oij", metric = metric,
+                         horizon.time = horizon.time, obs.time = "Oij",
                          n.cv = n.cv)
   iCenRES <- summary(MAEQ, digits = 4)
   
@@ -57,9 +56,8 @@ bootsDynPrediCenJMMLSM <- function(i = 100, seed = 100, n = 2000, landmark.time 
                                 landmark.time = landmark.time, horizon.time = horizon.time, 
                                 obs.time = "Oij", 
                                 datatype = datatype,
-                                quadpoint = 8, maxiter = 1000, n.cv = n.cv, 
-                                quantile.width = 0.25,
-                                metric = metric)
+                                quadpoint = 5, maxiter = 1000, n.cv = n.cv, 
+                                quantile.width = 0.25)
   
   JMMLSMRES <- summary(JMMLSM.fit, digits = 4) 
   

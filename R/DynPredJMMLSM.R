@@ -15,8 +15,7 @@ DynPredJMMLSM <- function(seed = 100,
                                int.time.Var = NULL,
                                datatype = c("midpoint", "rightpoint", "uniform"),
                                quadpoint = NULL, maxiter = 1000, n.cv = 3, 
-                               quantile.width = 0.25, 
-                               metric = c("MAPE", "Brier Score", "AUC", "Cindex"), ...) {
+                               quantile.width = 0.25, ...) {
   
   if (is.null(landmark.time)) 
     stop("Please specify the landmark.time for dynamic prediction.")   
@@ -96,8 +95,7 @@ DynPredJMMLSM <- function(seed = 100,
     new.surv.formula <- as.formula(paste(surv.out, surv.fixed, sep = "~"))  
     
     train.Ydata <- train.Ydata[, c(ID, long.var[1], "Stime", "time", long.var[2:length(long.var)])]
-    train.Tdata <- train.Tdata[, c(ID, surv.var[1:2], "Stime", surv.var[3:length(surv.var)])]
-    colnames(train.Tdata)[2] <- "survtime"
+    train.Tdata <- train.Tdata[, c(ID, "survtime", surv.var[2], "Stime", surv.var[3:length(surv.var)])]
     
     a <- proc.time()
     fit <- try(JMH::JMMLSM(cdata = train.Tdata, ydata = train.Ydata,
@@ -155,7 +153,6 @@ DynPredJMMLSM <- function(seed = 100,
         if ('try-error' %in% class(survfit[[i]])) {
           errormess[i] <- 0
         } else {
-            next
         }
       }
       
@@ -164,146 +161,135 @@ DynPredJMMLSM <- function(seed = 100,
         metric.cv[[t]] <- NULL
       } else {
         
-        if (metric == "MAPE") {
-          AllSurv <- list()
-          for (j in 1:length(horizon.time)) {
-            Surv <- as.data.frame(matrix(0, nrow = nrow(val.Tdata), ncol = 2))
-            colnames(Surv) <- c("ID", "Surv")
-            Surv$ID <- val.Tdata[, ID]
-            ## extract estimated survival prob
-            for (k in 1:nrow(Surv)) {
-              Surv[k, 2] <- survfit[[k]]$Pred[[1]][j, 2]
-            }
-            Surv <- Surv[!is.nan(Surv$Surv), ]
-            ## group subjects based on survival prob
-            quant <- quantile(Surv$Surv, probs = seq(0, 1, by = quantile.width))
-            EmpiricalSurv <- rep(NA, groups)
-            PredictedSurv <- rep(NA, groups)
-            count <- 1
-            for (i in 1:groups) {
-              if (quant[i] != 1) {
-                count <- count + 1
-                subquant <- Surv[Surv$Surv > quant[i] & 
-                                   Surv$Surv <= quant[i + 1], c(1, 2)]
-                quantsubdata <- val.Tdata[val.Tdata[, 
-                                                    ID] %in% subquant$ID, 2:3]
-                colnames(quantsubdata) <- c("time", "status")
-                fitKM <- survival::survfit(survival::Surv(time, 
-                                                          status) ~ 1, data = quantsubdata)
-                fitKM.horizon <- try(summary(fitKM, times = horizon.time[j]), 
-                                     silent = TRUE)
-                if ("try-error" %in% class(fitKM.horizon)) {
-                  EmpiricalSurv[i] <- summary(fitKM, times = max(quantsubdata$time))$surv
-                }
-                else {
-                  EmpiricalSurv[i] <- summary(fitKM, times = horizon.time[j])$surv
-                }
-                PredictedSurv[i] <- mean(subquant$Surv)
-              }
-            }
-            EmpiricalSurv <- EmpiricalSurv[1:count]
-            PredictedSurv <- PredictedSurv[1:count]
-            AllSurv[[j]] <- data.frame(EmpiricalSurv, PredictedSurv)
-          }
-          names(AllSurv) <- horizon.time
-          result <- list(AllSurv = AllSurv)
-          
-          metric.cv[[t]] <- result
-        } else if (metric == "Brier Score") {
-          
+        metric.cv[[t]] <- list()
+        ### MAPE
+        AllSurv <- list()
+        for (j in 1:length(horizon.time)) {
           Surv <- as.data.frame(matrix(0, nrow = nrow(val.Tdata), ncol = 2))
           colnames(Surv) <- c("ID", "Surv")
           Surv$ID <- val.Tdata[, ID]
-          
-          ## fit a Kalplan-Meier estimator
-          New.surv.formula.out <- paste0("survival::Surv(survtime,", 
-                                         surv.var[2], "==0)")
-          New.surv.formula <- as.formula(paste(New.surv.formula.out, 1, sep = "~"))
-          fitKM <- survival::survfit(New.surv.formula, data = val.Tdata)
-          
-          Gs <- summary(fitKM, times = landmark.time)$surv
-          mean.Brier <- matrix(NA, nrow = length(horizon.time), ncol = 1)
-          for (j in 1:length(horizon.time)) {
-            fitKM.horizon <- try(summary(fitKM, times = horizon.time[j]), silent = TRUE)
-            if ('try-error' %in% class(fitKM.horizon)) {
-              mean.Brier[j, 1] <- NA
-            } else {
-              Gu <- fitKM.horizon$surv
-              ## true counting process
-              N1 <- vector()
-              Gt <- vector()
-              W.IPCW <- vector()
-              for (i in 1:nrow(Surv)) {
-                if (val.Tdata[i, 2] <= horizon.time[j] && val.Tdata[i, 3] == 1) {
-                  N1[i] <- 1
-                  Gt[i] <- summary(fitKM, times = val.Tdata[i, 2])$surv
+          ## extract estimated survival prob
+          for (k in 1:nrow(Surv)) {
+            Surv[k, 2] <- survfit[[k]]$Pred[[1]][j, 2]
+          }
+          Surv <- Surv[!is.nan(Surv$Surv), ]
+          ## group subjects based on survival prob
+          quant <- quantile(Surv$Surv, probs = seq(0, 1, by = quantile.width))
+          EmpiricalSurv <- rep(NA, groups)
+          PredictedSurv <- rep(NA, groups)
+          count <- 0
+          for (i in 1:groups) {
+            if (quant[i] != 1) {
+              count <- count + 1
+              subquant <- Surv[Surv$Surv > quant[i] & 
+                                 Surv$Surv <= quant[i + 1], c(1, 2)]
+              quantsubdata <- val.Tdata[val.Tdata[, 
+                                                  ID] %in% subquant$ID, 2:3]
+              colnames(quantsubdata) <- c("time", "status")
+              fitKM <- survival::survfit(survival::Surv(time, 
+                                                        status) ~ 1, data = quantsubdata)
+              fitKM.horizon <- try(summary(fitKM, times = horizon.time[j]), 
+                                   silent = TRUE)
+              if ("try-error" %in% class(fitKM.horizon)) {
+                EmpiricalSurv[i] <- summary(fitKM, times = max(quantsubdata$time))$surv
+              }
+              else {
+                tempSurv <- summary(fitKM, times = horizon.time[j])$surv
+                if (is.null(tempSurv)) {
+                  EmpiricalSurv[i] <- 0
                 } else {
-                  N1[i] <- 0
-                  Gt[i] <- NA
-                }
-                
-                if (val.Tdata[i, 2] > horizon.time[j]) {
-                  W.IPCW[i] <- 1/(Gu/Gs)
-                } else if (val.Tdata[i, 2] <= horizon.time[j] && val.Tdata[i, 3] == 1) {
-                  W.IPCW[i] <- 1/(Gt[i]/Gs)
-                } else {
-                  W.IPCW[i] <- NA
+                  EmpiricalSurv[i] <- tempSurv 
                 }
               }
-              ## extract estimated Survival probability
-              for (k in 1:nrow(Surv)) {
-                Surv[k, 2] <- survfit[[k]]$Pred[[1]][j, 2]
-              }
-              
-              RAWData.Brier <- data.frame(Surv, N1, W.IPCW)
-              colnames(RAWData.Brier)[1:2] <- c("ID", "Surv")
-              RAWData.Brier$Brier <- RAWData.Brier$W.IPCW*
-                abs(1 - RAWData.Brier$Surv - RAWData.Brier$N1)^2
-              mean.Brier[j, 1] <- sum(RAWData.Brier$Brier, na.rm = TRUE)/nrow(RAWData.Brier)
+              PredictedSurv[i] <- mean(subquant$Surv)
             }
-            
-            
           }
-          metric.cv[[t]] <- mean.Brier
-          
-        } else if (metric %in% c("AUC", "Cindex")) {
-          
-          Surv <- as.data.frame(matrix(0, nrow = nrow(val.Tdata), ncol = 2))
-          colnames(Surv) <- c("ID", "Surv")
-          Surv$ID <- val.Tdata[, ID]
-          Surv$time <- val.Tdata[, "survtime"]
-          Surv$status <- val.Tdata[, surv.var[2]]
-          mean.AUC <- matrix(NA, nrow = length(horizon.time), ncol = 1)
-          ## extract estimated Survival probability
-          for (j in 1:length(horizon.time)) {
-            for (k in 1:nrow(Surv)) {
-              Surv[k, 2] <- survfit[[k]]$Pred[[1]][j, 2]
-            }
-            
-            if (metric == "AUC") {
-              ROC <- timeROC::timeROC(T = Surv$time, delta = Surv$status,
-                                      weighting = "marginal",
-                                      marker = -Surv$Surv, cause = 1,
-                                      times = horizon.time[j])
-              
-              mean.AUC[j, 1] <- ROC$AUC[2]
-            } else {
-              
-              mean.AUC[j, 1] <- CindexCR(Surv$time, Surv$status, -Surv$Surv, 1)
-              
-            }
-            
-          }
-          
-          
-          metric.cv[[t]] <- mean.AUC
-          
-          
-        } else {
-          stop("Please specify one of the following metrics for prediction assessment: MAPE, Brier Score, AUC.")
+          #EmpiricalSurv <- EmpiricalSurv[1:count]
+          #PredictedSurv <- PredictedSurv[1:count]
+          AllSurv[[j]] <- data.frame(EmpiricalSurv, PredictedSurv)
         }
-
-
+        names(AllSurv) <- horizon.time
+        metric.cv[[t]][[1]] <- AllSurv
+        
+        ### Brier
+        Surv <- as.data.frame(matrix(0, nrow = nrow(val.Tdata), ncol = 2))
+        colnames(Surv) <- c("ID", "Surv")
+        Surv$ID <- val.Tdata[, ID]
+        
+        ## fit a Kalplan-Meier estimator
+        New.surv.formula.out <- paste0("survival::Surv(survtime,", 
+                                       surv.var[2], "==0)")
+        New.surv.formula <- as.formula(paste(New.surv.formula.out, 1, sep = "~"))
+        fitKM <- survival::survfit(New.surv.formula, data = val.Tdata)
+        
+        Gs <- summary(fitKM, times = landmark.time)$surv
+        mean.Brier <- matrix(NA, nrow = length(horizon.time), ncol = 1)
+        for (j in 1:length(horizon.time)) {
+          fitKM.horizon <- try(summary(fitKM, times = horizon.time[j]), silent = TRUE)
+          if ('try-error' %in% class(fitKM.horizon)) {
+            mean.Brier[j, 1] <- NA
+          } else {
+            Gu <- fitKM.horizon$surv
+            ## true counting process
+            N1 <- vector()
+            Gt <- vector()
+            W.IPCW <- vector()
+            for (i in 1:nrow(Surv)) {
+              if (val.Tdata[i, 2] <= horizon.time[j] && val.Tdata[i, 3] == 1) {
+                N1[i] <- 1
+                Gt[i] <- summary(fitKM, times = val.Tdata[i, 2])$surv
+              } else {
+                N1[i] <- 0
+                Gt[i] <- NA
+              }
+              
+              if (val.Tdata[i, 2] > horizon.time[j]) {
+                W.IPCW[i] <- 1/(Gu/Gs)
+              } else if (val.Tdata[i, 2] <= horizon.time[j] && val.Tdata[i, 3] == 1) {
+                W.IPCW[i] <- 1/(Gt[i]/Gs)
+              } else {
+                W.IPCW[i] <- NA
+              }
+            }
+            ## extract estimated Survival probability
+            for (k in 1:nrow(Surv)) {
+              Surv[k, 2] <- survfit[[k]]$Pred[[1]][j, 2]
+            }
+            
+            RAWData.Brier <- data.frame(Surv, N1, W.IPCW)
+            colnames(RAWData.Brier)[1:2] <- c("ID", "Surv")
+            RAWData.Brier$Brier <- RAWData.Brier$W.IPCW*
+              abs(1 - RAWData.Brier$Surv - RAWData.Brier$N1)^2
+            mean.Brier[j, 1] <- sum(RAWData.Brier$Brier, na.rm = TRUE)/nrow(RAWData.Brier)
+          }
+        }
+        metric.cv[[t]][[2]] <- mean.Brier
+        
+        ### AUC and Cindex
+        Surv <- as.data.frame(matrix(0, nrow = nrow(val.Tdata), ncol = 2))
+        colnames(Surv) <- c("ID", "Surv")
+        Surv$ID <- val.Tdata[, ID]
+        Surv$time <- val.Tdata[, "survtime"]
+        Surv$status <- val.Tdata[, surv.var[2]]
+        mean.AUC <- mean.Cindex <- matrix(NA, nrow = length(horizon.time), ncol = 1)
+        ## extract estimated Survival probability
+        for (j in 1:length(horizon.time)) {
+          for (k in 1:nrow(Surv)) {
+            Surv[k, 2] <- survfit[[k]]$Pred[[1]][j, 2]
+          }
+          
+          ROC <- timeROC::timeROC(T = Surv$time, delta = Surv$status,
+                                  weighting = "marginal",
+                                  marker = 1-Surv$Surv, cause = 1,
+                                  times = horizon.time[j])
+          
+          mean.AUC[j, 1] <- ROC$AUC[2]
+          mean.Cindex[j, 1] <- CindexCR(Surv$time, Surv$status, 1-Surv$Surv, 1)
+        }
+        
+        metric.cv[[t]][[3]] <- mean.AUC
+        metric.cv[[t]][[4]] <- mean.Cindex
+        names(metric.cv[[t]]) <- c("MAPE", "BrierScore", "AUC", "Cindex")
         writeLines(paste0("The ", t, " th validation is done!"))
       }
     }
@@ -311,7 +297,7 @@ DynPredJMMLSM <- function(seed = 100,
   
   result <- list(metric.cv = metric.cv, n.cv = n.cv, landmark.time = landmark.time,
                  horizon.time = horizon.time, quadpoint = quadpoint, 
-                 seed = seed, metric = metric)
+                 seed = seed)
   class(result) <- "DynPredJMMLSM"
   return(result)
 }

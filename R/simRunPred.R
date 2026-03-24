@@ -12,7 +12,7 @@ simRunPred <- function(sim = 10, n = 3000, seed = 100,
   
   boots.BS <- boots.AUC <- boots.MAPE <- boots.Cindex <- list()
   for (i in 1:sim) {
-    
+    writeLines(paste(i, "th simulation started!"))
     boots.BS[[i]] <- mclapply(1:sim, runPred,
                               seed = seed + i, metric = "Brier Score", 
                               n = n, exact.obs = exact.obs,
@@ -36,7 +36,7 @@ simRunPred <- function(sim = 10, n = 3000, seed = 100,
                                   n = n, exact.obs = exact.obs,
                                   landmark.time = landmark.time, horizon.time = horizon.time, 
                                   datatype = datatype, model = model, mc.cores = mc.cores)
-    
+    writeLines(paste(i, "th simulation done!"))
   }
   
   return(list(boots.BS = boots.BS, boots.AUC = boots.AUC,

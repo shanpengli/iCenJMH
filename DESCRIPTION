@@ -24,7 +24,8 @@ NeedsCompilation: yes
 Imports: Rcpp (>= 1.0.7), dplyr, nlme, mvtnorm, magrittr, timeROC
 LinkingTo: Rcpp, RcppEigen
 Depends: R (>= 3.5.0), MASS, statmod, parallel, utils, stats, survival
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
+Encoding: UTF-8
 LazyData: true
 Packaged: 2022-04-08 02:16:44 UTC; shanpengli
 Suggests: 
@@ -32,3 +33,4 @@ Suggests:
     spelling
 Language: en-US
 Config/testthat/edition: 3
+SystemRequirements: OpenMP (optional)

@@ -22,10 +22,11 @@
 ##' the next probability in the E-step. Default is 1e-6. 
 ##' @param quadpoint the number of Gauss-Hermite quadrature points. Default is 20.
 ##' @param print.para Print detailed information of each iteration. Default is FALSE, i.e., not to print the iteration details.
-##' @param initial.para Input initial estimate of parameters. Default is FALSE.
+##' @param initial.para Input initial estimate of parameters. Default is NULL.
 ##' @param c tuning parameter for bandwidth of kernel estimate of hazards.
 ##' @param hazard.kernel a character string of specifying the choice of kernel smoothing method for the hazard rates.
-##' @param con.criteria convergence criteria. Default is \code{abs}, i.e., the absolute difference between the iterates.
+##' @param con.criteria convergence criteria.
+##' @param n.cores number of logical cores for parallel computing in the E-step. Default is the maximum number of cores available minus 1.
 ##' @export
 ##'
 
@@ -42,9 +43,10 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
                        epsilon = 1e-04,
                        pStol = 1e-6,
                        quadpoint = NULL, print.para = FALSE,
-                       initial.para = TRUE, c = 0.95,
+                       initial.para = NULL, c = 0.95,
                        hazard.kernel = c("Epanechnikov", "uniform", "biweight"),
-                       con.criteria = "abs") {
+                       con.criteria = c("abs", "relative"),
+                       n.cores = NULL) {
   
   if (!inherits(long.formula, "formula") || length(long.formula) != 3) {
     stop("\nLinear mixed effects model must be a formula of the form \"resp ~ pred\".\n")
@@ -64,6 +66,14 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
   
   if (method == "standard" & is.null(quadpoint)) {
     quadpoint <- 20
+  }
+  
+  if (!con.criteria %in% c("abs", "relative")) {
+    stop("\nThe convergence criteria must be either abs or relative.\n")
+  }
+  
+  if (is.null(n.cores)) {
+    n.cores <- max(1L, parallel::detectCores()-1)
   }
   
   cnames <- colnames(Tdata)
@@ -130,8 +140,11 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
   alpha <- getinit$fixed.para$alpha
   Sig <- getinit$fixed.para$Sig
   p1a <- ncol(Sig) - 1
-  if (p1a == 2) Sigb <- Sig[1:2, 1:2]
-  if (p1a == 1) Sigb <- as.matrix(Sig[1, 1])
+  if (p1a == 1) {
+    Sigb <- as.matrix(Sig[1, 1]) 
+  } else {
+    Sigb <- Sig[1:p1a, 1:p1a]
+  }
   
   getGH <- GetGHmatrix(quadpoint = quadpoint, Sigb = Sigb)
   
@@ -209,7 +222,7 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
       
       GetEfun <- GetEad(beta, tau, gamma, alpha, H0, Sig, phi, Z, X1, W, Y,
                         X2, survtime, status, TID, YID, ni, nt, YS, xsmatrix, wsmatrix,
-                        S, iCen.ID, iCen.wID, pStol, c, hazard.kernel)
+                        S, iCen.ID, iCen.wID, pStol, c, hazard.kernel, n.cores = n.cores)
       
     }
 
@@ -293,7 +306,7 @@ iCenJMMLSM <- function(Ydata = NULL, Tdata = NULL,
           
           GetEfun <- GetEad(beta, tau, gamma, alpha, H0, Sig, phi, Z, X1, W, Y,
                             X2, survtime, status, TID, YID, ni, nt, YS, xsmatrix, wsmatrix,
-                            S, iCen.ID, iCen.wID, pStol, c, hazard.kernel)
+                            S, iCen.ID, iCen.wID, pStol, c, hazard.kernel, n.cores = n.cores)
           
         }
 

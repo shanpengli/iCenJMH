@@ -4,21 +4,8 @@
 #include <RcppEigen.h>
 #include "basics.h"
 
-// via the depends attribute we tell Rcpp to create hooks for
-// RcppEigen so that the build process will know what to do
-//
 // [[Rcpp::depends(RcppEigen)]]
 
-// simple example of creating two matrices and
-// returning the result of an operatioon on them
-//
-// via the exports attribute we tell Rcpp to make this function
-// available from R
-//
-
-// another simple example: outer product of a vector,
-// returning a matrix
-//
 // [[Rcpp::export]]
 double  MultVV(const Eigen::VectorXd & x, const Eigen::VectorXd & y) {
     double v = x.transpose() * y;
@@ -100,8 +87,8 @@ Eigen::MatrixXd updatePSLR(const Eigen::MatrixXd & YS, const Eigen::VectorXd & m
     q=mdata(j);
     for (i=0;i<q;i++)
     {
-      pSLR(mdataS(j)-1+i, 3)=exp(-phisu)*(1-exp(-YS(mdataS(j)-1+i, 3)))/(1-exp(-idsum(j)));
-      phisu += YS(mdataS(j)-1+i, 3);
+      pSLR.coeffRef(mdataS(j)-1+i, 3)=exp(-phisu)*(1-exp(-YS.coeff(mdataS(j)-1+i, 3)))/(1-exp(-idsum(j)));
+      phisu += YS.coeff(mdataS(j)-1+i, 3);
     }
   }
   

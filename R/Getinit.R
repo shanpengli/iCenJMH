@@ -49,7 +49,7 @@ Getinit <- function(Tdata = Tdata, Ydata = Ydata, long.formula = long.formula,
   survfmla <- as.formula(paste(survfmla.out1, survfmla.fixed, sep = "~"))
   fitSURV1 <- survival::coxph(formula = survfmla, data = TdataS, x = TRUE)
     
-  if (!initial.para) {
+  if (is.null(initial.para)) {
     gamma <- as.vector(fitSURV1$coefficients)
     
     beta <- longfit$coefficients$fixed
@@ -84,11 +84,11 @@ Getinit <- function(Tdata = Tdata, Ydata = Ydata, long.formula = long.formula,
       Sig[3, 1:2] <- Sig[1:2, 3] 
     }
   } else {
-    beta = c(5, 2, -3, -3, 2)
-    tau = c(1, 0.05, 0.2, 0.1, -0.2)
-    gamma = c(-0.05, 0.2, -0.1)
-    alpha = c(0.5, -0.5)
-    Sig = matrix(c(1, 0.1, 0.1, 0.5), nrow = 2, ncol = 2)
+    beta <- initial.para$beta
+    tau <- initial.para$tau
+    gamma <- initial.para$gamma
+    alpha <- initial.para$alpha
+    Sig <- initial.para$Sig
   }
 
   fixed.para <- list(beta = beta, tau = tau, gamma = gamma, alpha = alpha, Sig = Sig)

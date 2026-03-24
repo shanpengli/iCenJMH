@@ -355,42 +355,8 @@ int getECad(const Eigen::VectorXd & beta, const Eigen::VectorXd & tau,
     
   }
   
-  // Eigen::VectorXd TFUNENW = Eigen::VectorXd::Zero(k);
-  // Eigen::MatrixXd TFUNEBNW = Eigen::MatrixXd::Zero(k,p1a);
-  // Eigen::MatrixXd TFUNEBSNW = Eigen::MatrixXd::Zero(k,p1a*(p1a+1)/2);
-  // Eigen::VectorXd TFUNE = Eigen::VectorXd::Zero(k);
-  // Eigen::MatrixXd TFUNBW = Eigen::MatrixXd::Zero(k,(p1a+1));
-  // Eigen::MatrixXd TFUNBWE = Eigen::MatrixXd::Zero(k,(p1a+1));
-  // Eigen::MatrixXd TFUNBWSE = Eigen::MatrixXd::Zero(k,(p1a+2)*(p1a+1)/2);
-  // Eigen::MatrixXd TFUNBWS = Eigen::MatrixXd::Zero(k,(p1a+2)*(p1a+1)/2);
-  // countt=0;
-  // 
-  // for (j=0;j<k;j++) {
-  //   
-  //   for (t=0;t<nt(j);t++) {
-  //     
-  //     TFUNENW(j)+=FUNENW(countt);
-  //     TFUNEBNW.row(j)+=FUNEBNW.row(countt);
-  //     TFUNEBSNW.row(j)+=FUNEBSNW.row(countt);
-  //     TFUNE(j)+=FUNE(countt);
-  //     TFUNBW.row(j)+=FUNBW.row(countt);
-  //     TFUNBWE.row(j)+=FUNBWE.row(countt);
-  //     TFUNBWSE.row(j)+=FUNBWSE.row(countt);
-  //     TFUNBWS.row(j)+=FUNBWS.row(countt);
-  //     
-  //     countt++;
-  //   }
-  //   
   // }
   return 0;
-  // return Rcpp::List::create(Rcpp::Named("FUNENW")=FUNENW,
-  //                           Rcpp::Named("FUNEBNW")=FUNEBNW,
-  //                           Rcpp::Named("FUNEBSNW")=FUNEBSNW,
-  //                           Rcpp::Named("FUNE")=FUNE,
-  //                           Rcpp::Named("FUNBW")=FUNBW,
-  //                           Rcpp::Named("FUNBWE")=FUNBWE,
-  //                           Rcpp::Named("FUNBWSE")=FUNBWSE,
-  //                           Rcpp::Named("FUNBWS")=FUNBWS);
   
 }
 

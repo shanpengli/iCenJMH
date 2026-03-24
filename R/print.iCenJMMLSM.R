@@ -17,7 +17,7 @@ print.iCenJMMLSM <- function(x, digits = 4, ...) {
   cat("Number of groups:", nrow(x$Tdata), "\n\n")
   cat("Proportion of events:", round(x$PropComp[2, 2]/nrow(x$Tdata)*100, 2), "%\n")
   cat("\nNumerical intergration:\n")
-  cat("Method: Standard Guass-Hermite quadrature\n")
+  cat("Method:" , x$method, " Guass-Hermite quadrature\n")
   cat("Number of quadrature points: ", x$quadpoint, "\n")
   cat("Smoothing hazard kernel function: ", x$hazard.kernel, "\n")
   cat("Global bandwidth for kernel smoothing: ", x$c*x$H0[nrow(x$H0),1]/(8*nrow(x$H0)^0.2), "\n")
@@ -57,8 +57,11 @@ print.iCenJMMLSM <- function(x, digits = 4, ...) {
   cat("\n Association parameters:                 \n")
   dat <- data.frame(x$alpha, x$sealpha, x$alpha/x$sealpha, 2 * pnorm(-abs(x$alpha/x$sealpha)))
   colnames(dat) <- c("Estimate", "SE", "Z value", "p-val")
-  if (length(x$alpha) == 2) rownames(dat) <- c("alpha_b0", "alpha_w")
-  if (length(x$alpha) == 3) rownames(dat) <- c("alpha_b0", "alpha_b1", "alpha_w")
+  p1a <- length(x$alpha) - 1
+  rownames(dat) <- c(
+    paste0("alpha_b", seq_len(p1a) - 1),
+    "alpha_w"
+  )
   dat[, 1:3] <- round(dat[, 1:3], digits+1)
   dat[, 4] <- sprintf(paste("%.", digits, "f", sep = ""), dat[, 4])
   print(dat)

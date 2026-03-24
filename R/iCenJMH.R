@@ -4,7 +4,7 @@
 #' @importFrom statmod  gauss.quad
 #' @importFrom utils  read.table
 #' @importFrom survival coxph survfit Surv
-#' @importFrom parallel mclapply parLapply makeCluster stopCluster
+#' @importFrom parallel mclapply makeCluster stopCluster clusterExport clusterSetRNGStream parLapplyLB detectCores
 #' @importFrom dplyr left_join summarise n across group_by
 #' @importFrom MASS mvrnorm
 #' @importFrom nlme lme getVarCov lmeControl

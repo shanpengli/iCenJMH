@@ -14,84 +14,83 @@ summary.DynPredJMMLSM <- function (object, digits = 4, ...) {
   if (!inherits(object, "DynPredJMMLSM"))
     stop("Use only with 'DynPredJMMLSM' xs.\n") 
   
-  if (is.null(object$metric.cv)) {
+  if (is.null(object$metric.cv[[1]])) {
     stop("The cross validation fails. Please try using a different seed number.")
   } else {
     
-    metric <- object$metric
-    
-    if (metric == "Brier Score") {
+    ### MAPE
+    if(length(object$metric.cv[[1]]) == object$n.cv && sum(mapply(is.null, object$metric.cv[[1]])) == 0) {
       
-      if (length(object$metric.cv) == object$n.cv && sum(mapply(is.null, object$metric.cv)) == 0) {
-        sum <- 0
+      sum <- as.data.frame(matrix(0, nrow = length(object$horizon.time), ncol = 2))
+      sum[, 1] <- object$horizon.time
+      for (i in 1:length(object$horizon.time)) {
         for (j in 1:object$n.cv) {
-          sum <- sum + object$metric.cv[[j]]
+          sum[i, 2] <- sum[i, 2] + mean(abs(object$metric.cv[[1]][[j]]$AllSurv[[i]][, 1] - 
+                                              object$metric.cv[[1]][[j]]$AllSurv[[i]][, 2])) 
         }
-        sum <- sum/object$n.cv
-        
-        Brier <- round(sum[, 1], digits)
-        ExpectedBrier <- data.frame(object$horizon.time, Brier)
-        colnames(ExpectedBrier) <- c("Horizon Time", "Brier")
-        
-        cat("\nExpected Brier score at the landmark time of", object$landmark.time, "\nbased on", object$n.cv, "fold cross validation\n")
-        return(ExpectedBrier)
-      } else {
-        stop("The cross validation fails. Please try using a different seed number.")
       }
-      
-    } else if (metric == "MAPE") {
-      
-      if(length(object$metric.cv) == object$n.cv && sum(mapply(is.null, object$metric.cv)) == 0) {
-        
-        sum <- as.data.frame(matrix(0, nrow = length(object$horizon.time), ncol = 2))
-        sum[, 1] <- object$horizon.time
-        colnames(sum) <- c("Horizon Time", "SurvProb")
-        for (i in 1:length(object$horizon.time)) {
-          for (j in 1:object$n.cv) {
-            sum[i, 2] <- sum[i, 2] + mean(abs(object$metric.cv[[j]]$AllSurv[[i]][, 1] - 
-                                                object$metric.cv[[j]]$AllSurv[[i]][, 2]), na.rm = TRUE) 
-          }
-        }
-        sum[, -1] <- sum[, -1]/object$n.cv
-        
-        sum[, -1] <- round(sum[, -1], digits)
-        cat("\nMean of absolute error across quantiles of predicted risk scores at the landmark time of", object$landmark.time, "\nbased on", object$n.cv, "fold cross validation\n")
-        return(sum)
-      } else {
-        stop("The cross validation fails. Please try using a different seed number.")
-      }
-      
+      sum[, -1] <- sum[, -1]/object$n.cv
+      sum[, -1] <- round(sum[, -1], digits)
+      colnames(sum) <- c("Horizon Time", "MAPE")
+      ExpectedMAPE <- sum
+      cat("\nMean of absolute error across quantiles of predicted risk scores at the landmark time of", object$landmark.time, "\nbased on", object$n.cv, "fold cross validation\n")
+      print(ExpectedMAPE)
     } else {
-      
-      if (length(object$metric.cv) == object$n.cv && sum(mapply(is.null, object$metric.cv)) == 0) {
-        sum <- 0
-        for (j in 1:object$n.cv) {
-          sum <- sum + object$metric.cv[[j]]
-        }
-        sum <- sum/object$n.cv
-        
-        AUC <- round(sum[, 1], digits)
-        ExpectedAUC <- data.frame(object$horizon.time, AUC)
-        
-        if (metric == "AUC") {
-          colnames(ExpectedAUC) <- c("Horizon Time", "AUC")
-          cat("\nExpected AUC at the landmark time of", object$landmark.time, "\nbased on", object$n.cv, "fold cross validation\n")
-        } else {
-          colnames(ExpectedAUC) <- c("Horizon Time", "Cindex")
-          cat("\nExpected Cindex at the landmark time of", object$landmark.time, "\nbased on", object$n.cv, "fold cross validation\n")
-        }
-        return(ExpectedAUC)
-      } else {
-        stop("The cross validation fails. Please try using a different seed number.")
-      }
-      
+      cat("\nThe cross validation fails on MAPE. Please try using a different seed number.\n")
     }
     
+    ### Brier Score
+    if (length(object$metric.cv[[2]]) == object$n.cv && sum(mapply(is.null, object$metric.cv[[2]])) == 0) {
+      sum <- 0
+      for (j in 1:object$n.cv) {
+        sum <- sum + object$metric.cv[[2]][[j]]
+      }
+      sum <- sum/object$n.cv
+      
+      Brier <- round(sum[, 1], digits)
+      ExpectedBrier <- data.frame(object$horizon.time, Brier)
+      colnames(ExpectedBrier) <- c("Horizon Time", "Brier")
+      cat("\nExpected Brier score at the landmark time of", object$landmark.time, "\nbased on", object$n.cv, "fold cross validation\n")
+      print(ExpectedBrier)
+    } else {
+      cat("\nThe cross validation fails on Brier score. Please try using a different seed number.\n")
+    }
     
+    ### AUC and Cindex
+    if (length(object$metric.cv[[3]]) == object$n.cv && sum(mapply(is.null, object$metric.cv[[3]])) == 0) {
+      sum <- 0
+      for (j in 1:object$n.cv) {
+        sum <- sum + object$metric.cv[[3]][[j]]
+      }
+      sum <- sum/object$n.cv
+      
+      AUC <- round(sum[, 1], digits)
+      ExpectedAUC <- data.frame(object$horizon.time, AUC)
+      colnames(ExpectedAUC) <- c("Horizon Time", "AUC")
+      cat("\nExpected AUC at the landmark time of", object$landmark.time, "\nbased on", object$n.cv, "fold cross validation\n")
+      print(ExpectedAUC)
+    } else {
+      stop("The cross validation fails on AUC. Please try using a different seed number.")
+    }
     
+    if (length(object$metric.cv[[4]]) == object$n.cv && sum(mapply(is.null, object$metric.cv[[4]])) == 0) {
+      sum <- 0
+      for (j in 1:object$n.cv) {
+        sum <- sum + object$metric.cv[[4]][[j]]
+      }
+      sum <- sum/object$n.cv
+      
+      Cindex <- round(sum[, 1], digits)
+      ExpectedCindex <- data.frame(object$horizon.time, Cindex)
+      colnames(ExpectedCindex) <- c("Horizon Time", "Cindex")
+      cat("\nExpected Cindex at the landmark time of", object$landmark.time, "\nbased on", object$n.cv, "fold cross validation\n")
+      print(ExpectedCindex)
+    } else {
+      stop("The cross validation fails on Cindex. Please try using a different seed number.")
+    }
+    return(list(ExpectedMAPE = ExpectedMAPE,
+                ExpectedBrier = ExpectedBrier,
+                ExpectedAUC = ExpectedAUC,
+                ExpectedCindex = ExpectedCindex))
   }
-  
-  
-  
-  
 }

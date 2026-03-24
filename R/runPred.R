@@ -1,7 +1,7 @@
 ##' @export
 ##' 
 
-runPred <- function(i = 1, seed = 100, metric, n, exact.obs = 0.7,
+runPred <- function(i = 1, seed = 100, n, exact.obs = 0.7,
                     landmark.time, horizon.time, datatype = NULL, model = c("both", "iCenJMH", "JMH")) {
   
   library(iCenJMH)
@@ -38,9 +38,8 @@ runPred <- function(i = 1, seed = 100, metric, n, exact.obs = 0.7,
                           timeVar = "Oij",
                           iCen.info = iCen.info,
                           maxiter = 1000, epsilon = 1e-04, print.para = FALSE,
-                          initial.para = FALSE,
-                          pStol = 1e-06, c = 0.95, quadpoint = 8,
-                          hazard.kernel = "Epanechnikov", method = "adaptive")
+                          pStol = 1e-06, c = 0.95, quadpoint = 5,
+                          hazard.kernel = "Epanechnikov", method = "adaptive", con.criteria = "abs")
     
     Pred <- DynPredAcciCenJMMLSM(seed = seed + i, object = iCenfit, landmark.time = landmark.time, 
                                  horizon.time = horizon.time,
@@ -61,9 +60,8 @@ runPred <- function(i = 1, seed = 100, metric, n, exact.obs = 0.7,
                                  horizon.time = horizon.time, 
                                  obs.time = "Oij", 
                                  datatype = datatype,
-                                 quadpoint = 8, maxiter = 1000, n.cv = 4, 
-                                 quantile.width = 0.25,
-                                 metric = metric)
+                                 quadpoint = 5, maxiter = 1000, n.cv = 4, 
+                                 quantile.width = 0.25)
     
     #sum.JMMLSM <- summary(Pred.JMMLSM)
     
@@ -77,13 +75,12 @@ runPred <- function(i = 1, seed = 100, metric, n, exact.obs = 0.7,
                           timeVar = "Oij",
                           iCen.info = iCen.info,
                           maxiter = 1000, epsilon = 1e-04, print.para = FALSE,
-                          initial.para = FALSE,
-                          pStol = 1e-06, c = 0.95, quadpoint = 8,
-                          hazard.kernel = "Epanechnikov", method = "adaptive")
+                          pStol = 1e-06, c = 0.95, quadpoint = 5,
+                          hazard.kernel = "Epanechnikov", method = "adaptive", con.criteria = "abs")
     
     Pred <- DynPredAcciCenJMMLSM(seed = seed + i, object = iCenfit, landmark.time = landmark.time, 
                                  horizon.time = horizon.time,
-                                 obs.time = "Oij", metric = metric, n.cv = 4)
+                                 obs.time = "Oij", n.cv = 4)
     
     #sum <- summary(Pred)
     
@@ -102,11 +99,8 @@ runPred <- function(i = 1, seed = 100, metric, n, exact.obs = 0.7,
                                  horizon.time = horizon.time, 
                                  obs.time = "Oij", 
                                  datatype = datatype,
-                                 quadpoint = 8, maxiter = 1000, n.cv = 4, 
-                                 quantile.width = 0.25,
-                                 metric = metric)
-    
-    #sum.JMMLSM <- summary(Pred.JMMLSM)
+                                 quadpoint = 5, maxiter = 1000, n.cv = 4, 
+                                 quantile.width = 0.25)
     
   }
   

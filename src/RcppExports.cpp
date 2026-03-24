@@ -246,6 +246,47 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// getECad_parallel
+int getECad_parallel(const Eigen::VectorXd& beta, const Eigen::VectorXd& tau, const Eigen::VectorXd& gamma, const Eigen::VectorXd& alpha, const Eigen::MatrixXd& H0Y, const Eigen::MatrixXd& Sig, const Eigen::MatrixXd& X1, const Eigen::MatrixXd& Z, const Eigen::MatrixXd& W, const Eigen::VectorXd& Y, const Eigen::MatrixXd& X2, const Eigen::VectorXd& survtime, const Eigen::VectorXd& status, const Eigen::VectorXd& ni, const Eigen::VectorXd& nt, const Eigen::MatrixXd& xsmatrix, const Eigen::MatrixXd& wsmatrix, const Eigen::MatrixXd& pSLR, const Eigen::MatrixXd& Posbwi, const Eigen::MatrixXd& Poscov, Eigen::Map<Eigen::MatrixXd>& Psl, Eigen::Map<Eigen::VectorXd>& FUNENW, Eigen::Map<Eigen::MatrixXd>& FUNEBNW, Eigen::Map<Eigen::MatrixXd>& FUNEBSNW, Eigen::Map<Eigen::VectorXd>& FUNE, Eigen::Map<Eigen::MatrixXd>& FUNBW, Eigen::Map<Eigen::MatrixXd>& FUNBWE, Eigen::Map<Eigen::MatrixXd>& FUNBWSE, Eigen::Map<Eigen::MatrixXd>& FUNBWS, const double pStol, const int nthreads);
+RcppExport SEXP _iCenJMH_getECad_parallel(SEXP betaSEXP, SEXP tauSEXP, SEXP gammaSEXP, SEXP alphaSEXP, SEXP H0YSEXP, SEXP SigSEXP, SEXP X1SEXP, SEXP ZSEXP, SEXP WSEXP, SEXP YSEXP, SEXP X2SEXP, SEXP survtimeSEXP, SEXP statusSEXP, SEXP niSEXP, SEXP ntSEXP, SEXP xsmatrixSEXP, SEXP wsmatrixSEXP, SEXP pSLRSEXP, SEXP PosbwiSEXP, SEXP PoscovSEXP, SEXP PslSEXP, SEXP FUNENWSEXP, SEXP FUNEBNWSEXP, SEXP FUNEBSNWSEXP, SEXP FUNESEXP, SEXP FUNBWSEXP, SEXP FUNBWESEXP, SEXP FUNBWSESEXP, SEXP FUNBWSSEXP, SEXP pStolSEXP, SEXP nthreadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type tau(tauSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type gamma(gammaSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type H0Y(H0YSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type Sig(SigSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type X1(X1SEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type Z(ZSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type W(WSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type X2(X2SEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type survtime(survtimeSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type status(statusSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type ni(niSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type nt(ntSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type xsmatrix(xsmatrixSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type wsmatrix(wsmatrixSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type pSLR(pSLRSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type Posbwi(PosbwiSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type Poscov(PoscovSEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd>& >::type Psl(PslSEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::VectorXd>& >::type FUNENW(FUNENWSEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd>& >::type FUNEBNW(FUNEBNWSEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd>& >::type FUNEBSNW(FUNEBSNWSEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::VectorXd>& >::type FUNE(FUNESEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd>& >::type FUNBW(FUNBWSEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd>& >::type FUNBWE(FUNBWESEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd>& >::type FUNBWSE(FUNBWSESEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd>& >::type FUNBWS(FUNBWSSEXP);
+    Rcpp::traits::input_parameter< const double >::type pStol(pStolSEXP);
+    Rcpp::traits::input_parameter< const int >::type nthreads(nthreadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(getECad_parallel(beta, tau, gamma, alpha, H0Y, Sig, X1, Z, W, Y, X2, survtime, status, ni, nt, xsmatrix, wsmatrix, pSLR, Posbwi, Poscov, Psl, FUNENW, FUNEBNW, FUNEBSNW, FUNE, FUNBW, FUNBWE, FUNBWSE, FUNBWS, pStol, nthreads));
+    return rcpp_result_gen;
+END_RCPP
+}
 // getES
 double getES(const Eigen::VectorXd& beta, const Eigen::VectorXd& tau, const Eigen::VectorXd& gamma, const Eigen::VectorXd& alpha, const Eigen::MatrixXd& Sig, Eigen::MatrixXd& Z, Eigen::MatrixXd& X1, Eigen::MatrixXd& W, const Eigen::VectorXd& Y, Eigen::VectorXd& X2, const Eigen::VectorXd& obstime, const Eigen::MatrixXd& xsmatrix, const Eigen::MatrixXd& wsmatrix, const Eigen::VectorXd& pSLR, const Eigen::VectorXd& Si, const Eigen::VectorXd& CH0s, const Eigen::VectorXd& CH0u, const double indexX, const double indexW, const double pStol);
 RcppExport SEXP _iCenJMH_getES(SEXP betaSEXP, SEXP tauSEXP, SEXP gammaSEXP, SEXP alphaSEXP, SEXP SigSEXP, SEXP ZSEXP, SEXP X1SEXP, SEXP WSEXP, SEXP YSEXP, SEXP X2SEXP, SEXP obstimeSEXP, SEXP xsmatrixSEXP, SEXP wsmatrixSEXP, SEXP pSLRSEXP, SEXP SiSEXP, SEXP CH0sSEXP, SEXP CH0uSEXP, SEXP indexXSEXP, SEXP indexWSEXP, SEXP pStolSEXP) {
@@ -421,6 +462,41 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// logLik_learn
+double logLik_learn(const Eigen::VectorXd& bw, const Eigen::VectorXd& Y, const Eigen::MatrixXd& X, const Eigen::MatrixXd& Z, const Eigen::MatrixXd& W, const Eigen::MatrixXd& X2, const double CH0, const double HAZ0, const Eigen::VectorXd& beta, const Eigen::VectorXd& tau, const Eigen::VectorXd& gamma, const Eigen::VectorXd& alpha, const Eigen::MatrixXd& SigInv, const double logdetSig, const int status);
+RcppExport SEXP _iCenJMH_logLik_learn(SEXP bwSEXP, SEXP YSEXP, SEXP XSEXP, SEXP ZSEXP, SEXP WSEXP, SEXP X2SEXP, SEXP CH0SEXP, SEXP HAZ0SEXP, SEXP betaSEXP, SEXP tauSEXP, SEXP gammaSEXP, SEXP alphaSEXP, SEXP SigInvSEXP, SEXP logdetSigSEXP, SEXP statusSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type bw(bwSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type Z(ZSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type W(WSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type X2(X2SEXP);
+    Rcpp::traits::input_parameter< const double >::type CH0(CH0SEXP);
+    Rcpp::traits::input_parameter< const double >::type HAZ0(HAZ0SEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type tau(tauSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type gamma(gammaSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type SigInv(SigInvSEXP);
+    Rcpp::traits::input_parameter< const double >::type logdetSig(logdetSigSEXP);
+    Rcpp::traits::input_parameter< const int >::type status(statusSEXP);
+    rcpp_result_gen = Rcpp::wrap(logLik_learn(bw, Y, X, Z, W, X2, CH0, HAZ0, beta, tau, gamma, alpha, SigInv, logdetSig, status));
+    return rcpp_result_gen;
+END_RCPP
+}
+// openmp_status_cpp
+int openmp_status_cpp();
+RcppExport SEXP _iCenJMH_openmp_status_cpp() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(openmp_status_cpp());
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_iCenJMH_GetrisksetC", (DL_FUNC) &_iCenJMH_GetrisksetC, 1},
@@ -438,6 +514,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_iCenJMH_GetSE", (DL_FUNC) &_iCenJMH_GetSE, 6},
     {"_iCenJMH_getEC", (DL_FUNC) &_iCenJMH_getEC, 28},
     {"_iCenJMH_getECad", (DL_FUNC) &_iCenJMH_getECad, 30},
+    {"_iCenJMH_getECad_parallel", (DL_FUNC) &_iCenJMH_getECad_parallel, 31},
     {"_iCenJMH_getES", (DL_FUNC) &_iCenJMH_getES, 20},
     {"_iCenJMH_getESad", (DL_FUNC) &_iCenJMH_getESad, 22},
     {"_iCenJMH_getGradT", (DL_FUNC) &_iCenJMH_getGradT, 12},
@@ -445,6 +522,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_iCenJMH_getGradS", (DL_FUNC) &_iCenJMH_getGradS, 4},
     {"_iCenJMH_getHazard", (DL_FUNC) &_iCenJMH_getHazard, 6},
     {"_iCenJMH_getMC", (DL_FUNC) &_iCenJMH_getMC, 26},
+    {"_iCenJMH_logLik_learn", (DL_FUNC) &_iCenJMH_logLik_learn, 15},
+    {"_iCenJMH_openmp_status_cpp", (DL_FUNC) &_iCenJMH_openmp_status_cpp, 0},
     {NULL, NULL, 0}
 };
 

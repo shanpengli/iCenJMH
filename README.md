@@ -1,5 +1,120 @@
+iCenJMH: Efficient Joint Modeling with Longitudinal Data and
+Interval-Censored Covariates/Outcomes
+================
+
+- [iCenJMH](#icenjmh)
+  - [Installation](#installation)
+  - [Basic Usage](#basic-usage)
+  - [Parallel Computing (OpenMP
+    Support)](#parallel-computing-openmp-support)
+  - [macOS Users (Optional Setup)](#macos-users-optional-setup)
+  - [Notes](#notes)
+
 # iCenJMH
 
-library(devtools)
+`iCenJMH` provides efficient statistical methods for joint modeling of
+longitudinal and time-to-event data, with a focus on scalable
+computation using optimized C++ implementations.
 
-install_github("shanpengli/iCenJMH", build_vignettes = FALSE)
+------------------------------------------------------------------------
+
+## Installation
+
+Install the released version from CRAN:
+
+``` r
+install.packages("iCenJMH")
+```
+
+Install the development version from GitHub:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("YOUR_GITHUB_USERNAME/iCenJMH")
+```
+
+------------------------------------------------------------------------
+
+## Basic Usage
+
+``` r
+library(iCenJMH)
+
+# Check OpenMP status
+openmp_status()
+#> [1] 14
+```
+
+------------------------------------------------------------------------
+
+## Parallel Computing (OpenMP Support)
+
+This package uses **OpenMP** to accelerate computationally intensive C++
+routines.
+
+- On **Linux and Windows**, OpenMP is typically enabled automatically.
+- On **macOS**, OpenMP is not enabled by default.
+- If OpenMP is unavailable, the package runs in **single-threaded
+  mode**.
+
+------------------------------------------------------------------------
+
+### Check OpenMP Status
+
+``` r
+openmp_status()
+#> [1] 14
+```
+
+- Value \> 1 → OpenMP enabled  
+- Value = 1 → Serial execution
+
+------------------------------------------------------------------------
+
+## macOS Users (Optional Setup)
+
+### Step 1: Install OpenMP runtime
+
+``` bash
+brew install libomp
+```
+
+### Step 2: Configure R
+
+``` bash
+mkdir -p ~/.R
+nano ~/.R/Makevars
+```
+
+Add:
+
+``` make
+CPPFLAGS += -I/opt/homebrew/opt/libomp/include
+LDFLAGS += -L/opt/homebrew/opt/libomp/lib -lomp
+
+SHLIB_OPENMP_CFLAGS = -Xclang -fopenmp
+SHLIB_OPENMP_CXXFLAGS = -Xclang -fopenmp
+```
+
+### Step 3: Reinstall package
+
+``` r
+install.packages("iCenJMH")
+```
+
+### Step 4: Verify
+
+``` r
+openmp_status()
+#> [1] 14
+```
+
+------------------------------------------------------------------------
+
+## Notes
+
+- OpenMP is optional.
+- Package works without it.
+- Enables faster computation for large datasets.
+
+------------------------------------------------------------------------

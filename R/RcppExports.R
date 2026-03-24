@@ -61,6 +61,10 @@ getECad <- function(beta, tau, gamma, alpha, H0Y, Sig, X1, Z, W, Y, X2, survtime
     .Call(`_iCenJMH_getECad`, beta, tau, gamma, alpha, H0Y, Sig, X1, Z, W, Y, X2, survtime, status, ni, nt, xsmatrix, wsmatrix, pSLR, Posbwi, Poscov, Psl, FUNENW, FUNEBNW, FUNEBSNW, FUNE, FUNBW, FUNBWE, FUNBWSE, FUNBWS, pStol)
 }
 
+getECad_parallel <- function(beta, tau, gamma, alpha, H0Y, Sig, X1, Z, W, Y, X2, survtime, status, ni, nt, xsmatrix, wsmatrix, pSLR, Posbwi, Poscov, Psl, FUNENW, FUNEBNW, FUNEBSNW, FUNE, FUNBW, FUNBWE, FUNBWSE, FUNBWS, pStol, nthreads = 1L) {
+    .Call(`_iCenJMH_getECad_parallel`, beta, tau, gamma, alpha, H0Y, Sig, X1, Z, W, Y, X2, survtime, status, ni, nt, xsmatrix, wsmatrix, pSLR, Posbwi, Poscov, Psl, FUNENW, FUNEBNW, FUNEBSNW, FUNE, FUNBW, FUNBWE, FUNBWSE, FUNBWS, pStol, nthreads)
+}
+
 getES <- function(beta, tau, gamma, alpha, Sig, Z, X1, W, Y, X2, obstime, xsmatrix, wsmatrix, pSLR, Si, CH0s, CH0u, indexX, indexW, pStol) {
     .Call(`_iCenJMH_getES`, beta, tau, gamma, alpha, Sig, Z, X1, W, Y, X2, obstime, xsmatrix, wsmatrix, pSLR, Si, CH0s, CH0u, indexX, indexW, pStol)
 }
@@ -87,5 +91,13 @@ getHazard <- function(CumuH0, survtime, status, H0, CUH0, HAZ0) {
 
 getMC <- function(beta, tau, gamma, alpha, H0, Sig, Z, X1, W, Y, X2, survtime, status, ni, nt, Psl, PslT, FUNENW, FUNEBNW, FUNEBSNW, FUNE, FUNBW, FUNBWE, FUNBWSE, FUNBWS, pStol) {
     .Call(`_iCenJMH_getMC`, beta, tau, gamma, alpha, H0, Sig, Z, X1, W, Y, X2, survtime, status, ni, nt, Psl, PslT, FUNENW, FUNEBNW, FUNEBSNW, FUNE, FUNBW, FUNBWE, FUNBWSE, FUNBWS, pStol)
+}
+
+logLik_learn <- function(bw, Y, X, Z, W, X2, CH0, HAZ0, beta, tau, gamma, alpha, SigInv, logdetSig, status) {
+    .Call(`_iCenJMH_logLik_learn`, bw, Y, X, Z, W, X2, CH0, HAZ0, beta, tau, gamma, alpha, SigInv, logdetSig, status)
+}
+
+openmp_status_cpp <- function() {
+    .Call(`_iCenJMH_openmp_status_cpp`)
 }
 

@@ -63,10 +63,10 @@ double getES(const Eigen::VectorXd & beta, const Eigen::VectorXd & tau,
         X1(i,1) = Si(t);
         W(i,1) = Si(t);
         if (indexX != 0) {
-          X1(i,pbeta - 1) = obstimet(i)*X1(i,indexX - 1);
+          X1.coeffRef(i,pbeta - 1) = obstimet.coeff(i)*X1.coeff(i,indexX - 1);
         }
         if (indexW != 0) {
-          W(i,ptau - 1) = obstimet(i)*W(i,indexW - 1);
+          W.coeffRef(i,ptau - 1) = obstimet.coeff(i)*W.coeff(i,indexW - 1);
         }
       }
       X1.col(2) = obstimet;
@@ -186,10 +186,10 @@ double getESad(const Eigen::VectorXd & beta, const Eigen::VectorXd & tau,
         X1(i,1) = Si(t);
         W(i,1) = Si(t);
         if (indexX != 0) {
-          X1(i,pbeta - 1) = obstimet(i)*X1(i,indexX - 1);
+          X1.coeffRef(i,pbeta - 1) = obstimet.coeff(i)*X1.coeff(i,indexX - 1);
         }
         if (indexW != 0) {
-          W(i,ptau - 1) = obstimet(i)*W(i,indexW - 1);
+          W.coeffRef(i,ptau - 1) = obstimet.coeff(i)*W.coeff(i,indexW - 1);
         }
       }
       X1.col(2) = obstimet;

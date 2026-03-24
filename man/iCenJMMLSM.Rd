@@ -20,10 +20,11 @@ iCenJMMLSM(
   pStol = 1e-06,
   quadpoint = NULL,
   print.para = FALSE,
-  initial.para = TRUE,
+  initial.para = NULL,
   c = 0.95,
   hazard.kernel = c("Epanechnikov", "uniform", "biweight"),
-  con.criteria = "abs"
+  con.criteria = c("abs", "relative"),
+  n.cores = NULL
 )
 }
 \arguments{
@@ -64,13 +65,15 @@ the next probability in the E-step. Default is 1e-6.}
 
 \item{print.para}{Print detailed information of each iteration. Default is FALSE, i.e., not to print the iteration details.}
 
-\item{initial.para}{Input initial estimate of parameters. Default is FALSE.}
+\item{initial.para}{Input initial estimate of parameters. Default is NULL.}
 
 \item{c}{tuning parameter for bandwidth of kernel estimate of hazards.}
 
 \item{hazard.kernel}{a character string of specifying the choice of kernel smoothing method for the hazard rates.}
 
-\item{con.criteria}{convergence criteria. Default is \code{abs}, i.e., the absolute difference between the iterates.}
+\item{con.criteria}{convergence criteria.}
+
+\item{n.cores}{number of logical cores for parallel computing in the E-step. Default is the maximum number of cores available minus 1.}
 }
 \description{
 Joint modeling of longitudinal continuous data and competing risks

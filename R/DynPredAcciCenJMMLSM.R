@@ -10,9 +10,8 @@
 ##' @param maxiter the maximum number of iterations of the EM algorithm that the 
 ##' function will perform. Default is 10000.
 ##' @param n.cv number of folds for cross validation. Default is 3.
-##' @param metric a string to indicate which metric is used. 
-##' The available options for assessing the prediction accuracy are \code{Brier Score}, \code{AUC}, \code{Cindex}, \code{MAPE}.
 ##' @param quantile.width a numeric value of width of quantile to be specified if \code{metric} is specified as \code{MAPE}. Default is 0.25.
+##' @param n.cores number of logical cores for parallel computing in the E-step. Default is the maximum number of cores available minus 1.
 ##' @param ... Further arguments passed to or from other methods.
 ##' @return a list of matrices with conditional probabilities for subjects.
 ##' @author Shanpeng Li \email{lishanpeng0913@ucla.edu}
@@ -22,7 +21,7 @@
 
 DynPredAcciCenJMMLSM <- function(seed = 100, object, landmark.time = NULL, horizon.time = NULL, 
                             obs.time = NULL, quadpoint = NULL, maxiter = 1000, n.cv = 3, 
-                            metric = c("Brier Score", "AUC", "Cindex", "MAPE"), quantile.width = NULL, ...) {
+                            quantile.width = NULL, n.cores = NULL, ...) {
   
   
   if (!inherits(object, "iCenJMMLSM"))
@@ -41,13 +40,16 @@ DynPredAcciCenJMMLSM <- function(seed = 100, object, landmark.time = NULL, horiz
       stop(paste0(obs.time, " is not found in Ydata."))
     }
   }
-  if (metric == "MAPE") {
-    if (is.null(quantile.width)) {
-      quantile.width <- 0.25
-    }
-    groups <- 1/quantile.width
-    if (floor(groups) != groups)
-      stop("The reciprocal of quantile.width must be an integer.")
+  
+  if (is.null(quantile.width)) {
+    quantile.width <- 0.25
+  }
+  groups <- 1/quantile.width
+  if (floor(groups) != groups)
+    stop("The reciprocal of quantile.width must be an integer.")
+  
+  if (is.null(n.cores)) {
+    n.cores <- max(1L, parallel::detectCores()-1)
   }
   
   set.seed(seed)
@@ -85,11 +87,12 @@ DynPredAcciCenJMMLSM <- function(seed = 100, object, landmark.time = NULL, horiz
                           maxiter = maxiter,
                           epsilon = object$epsilon,
                           print.para = FALSE,
-                          initial.para = FALSE,
+                          con.criteria = "abs",
                           pStol = object$pStol,
                           c = object$c,
                           hazard.kernel = object$hazard.kernel,
-                          int.time.Var = int.time.Var), silent = TRUE)
+                          int.time.Var = int.time.Var,
+                          n.cores = n.cores), silent = TRUE)
     
     writeLines(paste0("The ", t, " th training is done!"))
     
@@ -128,149 +131,138 @@ DynPredAcciCenJMMLSM <- function(seed = 100, object, landmark.time = NULL, horiz
         metric.cv[[t]] <- NULL
       } else {
         
-        if (metric == "Brier Score") {
-          
+        metric.cv[[t]] <- list()
+        
+        ### MAPE
+        AllSurv <- list()
+        for (j in 1:length(horizon.time)) {
           Surv <- as.data.frame(matrix(0, nrow = nrow(val.Tdata), ncol = 2))
           colnames(Surv) <- c("ID", "Surv")
           Surv$ID <- val.Tdata[, ID]
-          
-          ## fit a Kalplan-Meier estimator
-          New.surv.formula.out <- paste0("survival::Surv(", surv.var[1], ",", 
-                                         surv.var[2], "==0)")
-          New.surv.formula <- as.formula(paste(New.surv.formula.out, 1, sep = "~"))
-          fitKM <- survival::survfit(New.surv.formula, data = val.Tdata)
-          
-          Gs <- summary(fitKM, times = landmark.time)$surv
-          mean.Brier <- matrix(NA, nrow = length(horizon.time), ncol = 1)
-          for (j in 1:length(horizon.time)) {
-            fitKM.horizon <- try(summary(fitKM, times = horizon.time[j]), silent = TRUE)
-            if ('try-error' %in% class(fitKM.horizon)) {
-              mean.Brier[j, 1] <- NA
-            } else {
-              Gu <- fitKM.horizon$surv
-              ## true counting process
-              N1 <- vector()
-              Gt <- vector()
-              W.IPCW <- vector()
-              for (i in 1:nrow(Surv)) {
-                if (val.Tdata[i, surv.var[1]] <= horizon.time[j] && val.Tdata[i, surv.var[2]] == 1) {
-                  N1[i] <- 1
-                  Gt[i] <- summary(fitKM, times = val.Tdata[i, surv.var[1]])$surv
-                } else {
-                  N1[i] <- 0
-                  Gt[i] <- NA
-                }
-                
-                if (val.Tdata[i, surv.var[1]] > horizon.time[j]) {
-                  W.IPCW[i] <- 1/(Gu/Gs)
-                } else if (val.Tdata[i, surv.var[1]] <= horizon.time[j] && val.Tdata[i, surv.var[2]] == 1) {
-                  W.IPCW[i] <- 1/(Gt[i]/Gs)
-                } else {
-                  W.IPCW[i] <- NA
-                }
-              }
-              ## extract estimated Survival probability
-              for (k in 1:nrow(Surv)) {
-                Surv[k, 2] <- survfit$Pred[[k]][j, 2]
-              }
-              
-              RAWData.Brier <- data.frame(Surv, N1, W.IPCW)
-              colnames(RAWData.Brier)[1:2] <- c("ID", "Surv")
-              RAWData.Brier$Brier <- RAWData.Brier$W.IPCW*
-                abs(1 - RAWData.Brier$Surv - RAWData.Brier$N1)^2
-              mean.Brier[j, 1] <- sum(RAWData.Brier$Brier, na.rm = TRUE)/nrow(RAWData.Brier)
-            }
-            
-            
+          ## extract estimated survival prob
+          for (k in 1:nrow(Surv)) {
+            Surv[k, 2] <- survfit$Pred[[k]][j, 2]
           }
-          metric.cv[[t]] <- mean.Brier
-          
-        } else if (metric == "MAPE") {
-          
-          AllSurv <- list()
-          
-          for (j in 1:length(horizon.time)) {
-            Surv <- as.data.frame(matrix(0, nrow = nrow(val.Tdata), ncol = 2))
-            colnames(Surv) <- c("ID", "Surv")
-            Surv$ID <- val.Tdata[, ID]
-            ## extract estimated survival prob
-            for (k in 1:nrow(Surv)) {
-              Surv[k, 2] <- survfit$Pred[[k]][j, 2]
-            }
-            Surv <- Surv[!is.nan(Surv$Surv), ]
-            ## group subjects based on survival prob
-            quant <- quantile(Surv$Surv, probs = seq(0, 1, by = quantile.width))
-            EmpiricalSurv <- rep(NA, groups)
-            PredictedSurv <- rep(NA, groups)
-            for (i in 1:groups) {
-              subquant <- Surv[Surv$Surv > quant[i] &
-                                 Surv$Surv <= quant[i+1], c(1, 2)]
-              quantsubdata <- val.Tdata[val.Tdata[, ID] %in% subquant$ID, surv.var]
-              colnames(quantsubdata) <- c("time", "status")
-              fitKM <- try(survival::survfit(survival::Surv(time, status) ~ 1, data = quantsubdata),
-                           silent = TRUE)
-              if ('try-error' %in% class(fitKM)) {
-                EmpiricalSurv[i] <- PredictedSurv[i] <- NA
+          Surv <- Surv[!is.nan(Surv$Surv), ]
+          ## group subjects based on survival prob
+          quant <- quantile(Surv$Surv, probs = seq(0, 1, by = quantile.width))
+          EmpiricalSurv <- rep(NA, groups)
+          PredictedSurv <- rep(NA, groups)
+          for (i in 1:groups) {
+            subquant <- Surv[Surv$Surv > quant[i] &
+                               Surv$Surv <= quant[i+1], c(1, 2)]
+            quantsubdata <- val.Tdata[val.Tdata[, ID] %in% subquant$ID, surv.var]
+            colnames(quantsubdata) <- c("time", "status")
+            fitKM <- try(survival::survfit(survival::Surv(time, status) ~ 1, data = quantsubdata),
+                         silent = TRUE)
+            if ('try-error' %in% class(fitKM)) {
+              EmpiricalSurv[i] <- PredictedSurv[i] <- NA
+            } else {
+              fitKM.horizon <- try(summary(fitKM, times = horizon.time[j]), silent = TRUE)
+              if ('try-error' %in% class(fitKM.horizon)) {
+                EmpiricalSurv[i] <- summary(fitKM, times = max(quantsubdata$time))$surv
               } else {
-                fitKM.horizon <- try(summary(fitKM, times = horizon.time[j]), silent = TRUE)
-                if ('try-error' %in% class(fitKM.horizon)) {
-                  EmpiricalSurv[i] <- summary(fitKM, times = max(quantsubdata$time))$surv
+                tempSurv <- summary(fitKM, times = horizon.time[j])$surv
+                if (is.null(tempSurv)) {
+                  EmpiricalSurv[i] <- 0
                 } else {
-                  EmpiricalSurv[i] <- summary(fitKM, times = horizon.time[j])$surv
+                  EmpiricalSurv[i] <- tempSurv 
                 }
-                PredictedSurv[i] <-mean(subquant$Surv)
+              }
+              PredictedSurv[i] <-mean(subquant$Surv)
+            }
+          }
+          AllSurv[[j]] <- data.frame(EmpiricalSurv, PredictedSurv)
+        }
+        names(AllSurv) <- horizon.time
+        metric.cv[[t]][[1]] <- AllSurv
+        
+        ### Brier Score
+        Surv <- as.data.frame(matrix(0, nrow = nrow(val.Tdata), ncol = 2))
+        colnames(Surv) <- c("ID", "Surv")
+        Surv$ID <- val.Tdata[, ID]
+        
+        ## fit a Kalplan-Meier estimator
+        New.surv.formula.out <- paste0("survival::Surv(", surv.var[1], ",", 
+                                       surv.var[2], "==0)")
+        New.surv.formula <- as.formula(paste(New.surv.formula.out, 1, sep = "~"))
+        fitKM <- survival::survfit(New.surv.formula, data = val.Tdata)
+        
+        Gs <- summary(fitKM, times = landmark.time)$surv
+        mean.Brier <- matrix(NA, nrow = length(horizon.time), ncol = 1)
+        for (j in 1:length(horizon.time)) {
+          fitKM.horizon <- try(summary(fitKM, times = horizon.time[j]), silent = TRUE)
+          if ('try-error' %in% class(fitKM.horizon)) {
+            mean.Brier[j, 1] <- NA
+          } else {
+            Gu <- fitKM.horizon$surv
+            ## true counting process
+            N1 <- vector()
+            Gt <- vector()
+            W.IPCW <- vector()
+            for (i in 1:nrow(Surv)) {
+              if (val.Tdata[i, surv.var[1]] <= horizon.time[j] && val.Tdata[i, surv.var[2]] == 1) {
+                N1[i] <- 1
+                Gt[i] <- summary(fitKM, times = val.Tdata[i, surv.var[1]])$surv
+              } else {
+                N1[i] <- 0
+                Gt[i] <- NA
+              }
+              
+              if (val.Tdata[i, surv.var[1]] > horizon.time[j]) {
+                W.IPCW[i] <- 1/(Gu/Gs)
+              } else if (val.Tdata[i, surv.var[1]] <= horizon.time[j] && val.Tdata[i, surv.var[2]] == 1) {
+                W.IPCW[i] <- 1/(Gt[i]/Gs)
+              } else {
+                W.IPCW[i] <- NA
               }
             }
-            AllSurv[[j]] <- data.frame(EmpiricalSurv, PredictedSurv)
-          }
-          names(AllSurv) <- horizon.time
-          result <- list(AllSurv = AllSurv)
-          
-          metric.cv[[t]] <- result
-          
-        } else if (metric %in% c("AUC", "Cindex")) {
-          
-          Surv <- as.data.frame(matrix(0, nrow = nrow(val.Tdata), ncol = 2))
-          colnames(Surv) <- c("ID", "Surv")
-          Surv$ID <- val.Tdata[, ID]
-          Surv$time <- val.Tdata[, surv.var[1]]
-          Surv$status <- val.Tdata[, surv.var[2]]
-          mean.AUC <- matrix(NA, nrow = length(horizon.time), ncol = 1)
-          ## extract estimated Survival probability
-          for (j in 1:length(horizon.time)) {
+            ## extract estimated Survival probability
             for (k in 1:nrow(Surv)) {
               Surv[k, 2] <- survfit$Pred[[k]][j, 2]
             }
             
-            if (metric == "AUC") {
-              ROC <- timeROC::timeROC(T = Surv$time, delta = Surv$status,
-                                      weighting = "marginal",
-                                      marker = -Surv$Surv, cause = 1,
-                                      times = horizon.time[j])
-              
-              mean.AUC[j, 1] <- ROC$AUC[2]
-            } else {
-              
-              mean.AUC[j, 1] <- CindexCR(Surv$time, Surv$status, 1-Surv$Surv, 1)
-              
-            }
-            
-            
+            RAWData.Brier <- data.frame(Surv, N1, W.IPCW)
+            colnames(RAWData.Brier)[1:2] <- c("ID", "Surv")
+            RAWData.Brier$Brier <- RAWData.Brier$W.IPCW*
+              abs(1 - RAWData.Brier$Surv - RAWData.Brier$N1)^2
+            mean.Brier[j, 1] <- sum(RAWData.Brier$Brier, na.rm = TRUE)/nrow(RAWData.Brier)
+          }
+        }
+        metric.cv[[t]][[2]] <- mean.Brier
+        
+        ### AUC and Cindex
+        Surv <- as.data.frame(matrix(0, nrow = nrow(val.Tdata), ncol = 2))
+        colnames(Surv) <- c("ID", "Surv")
+        Surv$ID <- val.Tdata[, ID]
+        Surv$time <- val.Tdata[, surv.var[1]]
+        Surv$status <- val.Tdata[, surv.var[2]]
+        mean.AUC <- mean.Cindex <- matrix(NA, nrow = length(horizon.time), ncol = 1)
+        ## extract estimated Survival probability
+        for (j in 1:length(horizon.time)) {
+          for (k in 1:nrow(Surv)) {
+            Surv[k, 2] <- survfit$Pred[[k]][j, 2]
           }
           
-          metric.cv[[t]] <- mean.AUC
           
-        } else {
-          stop("Please choose one of the following metrics: Brier Score, AUC, Cindex, MAPE.")
+          ROC <- timeROC::timeROC(T = Surv$time, delta = Surv$status,
+                                  weighting = "marginal",
+                                  marker = -Surv$Surv, cause = 1,
+                                  times = horizon.time[j])
+          
+          mean.AUC[j, 1] <- ROC$AUC[2]
+          mean.Cindex[j, 1] <- CindexCR(Surv$time, Surv$status, 1-Surv$Surv, 1)
         }
-
+        metric.cv[[t]][[3]] <- mean.AUC
+        metric.cv[[t]][[4]] <- mean.Cindex
       }
     }
     writeLines(paste0("The ", t, " th validation is done!"))
+    names(metric.cv[[t]]) <- c("MAPE", "BrierScore", "AUC", "Cindex")
   }
   result <- list(metric.cv = metric.cv, n.cv = n.cv, landmark.time = landmark.time,
                  horizon.time = horizon.time, quadpoint = quadpoint, 
-                 seed = seed, metric = metric)
+                 seed = seed)
   class(result) <- "DynPredAcciCenJMMLSM"
   return(result)
 }
