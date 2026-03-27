@@ -14,19 +14,19 @@ summary.DynPredJMMLSM <- function (object, digits = 4, ...) {
   if (!inherits(object, "DynPredJMMLSM"))
     stop("Use only with 'DynPredJMMLSM' xs.\n") 
   
-  if (is.null(object$metric.cv[[1]])) {
+  if (is.null(object$metric.cv)) {
     stop("The cross validation fails. Please try using a different seed number.")
   } else {
     
     ### MAPE
-    if(length(object$metric.cv[[1]]) == object$n.cv && sum(mapply(is.null, object$metric.cv[[1]])) == 0) {
+    if(length(object$metric.cv) == object$n.cv && sum(mapply(is.null, object$metric.cv)) == 0) {
       
       sum <- as.data.frame(matrix(0, nrow = length(object$horizon.time), ncol = 2))
       sum[, 1] <- object$horizon.time
       for (i in 1:length(object$horizon.time)) {
         for (j in 1:object$n.cv) {
-          sum[i, 2] <- sum[i, 2] + mean(abs(object$metric.cv[[1]][[j]]$AllSurv[[i]][, 1] - 
-                                              object$metric.cv[[1]][[j]]$AllSurv[[i]][, 2])) 
+          sum[i, 2] <- sum[i, 2] + mean(abs(object$metric.cv[[j]][[1]][[i]][, 1] - 
+                                              object$metric.cv[[j]][[1]][[i]][, 2])) 
         }
       }
       sum[, -1] <- sum[, -1]/object$n.cv
@@ -40,10 +40,10 @@ summary.DynPredJMMLSM <- function (object, digits = 4, ...) {
     }
     
     ### Brier Score
-    if (length(object$metric.cv[[2]]) == object$n.cv && sum(mapply(is.null, object$metric.cv[[2]])) == 0) {
+    if (length(object$metric.cv) == object$n.cv && sum(mapply(is.null, object$metric.cv)) == 0) {
       sum <- 0
       for (j in 1:object$n.cv) {
-        sum <- sum + object$metric.cv[[2]][[j]]
+        sum <- sum + object$metric.cv[[j]][[2]]
       }
       sum <- sum/object$n.cv
       
@@ -57,10 +57,10 @@ summary.DynPredJMMLSM <- function (object, digits = 4, ...) {
     }
     
     ### AUC and Cindex
-    if (length(object$metric.cv[[3]]) == object$n.cv && sum(mapply(is.null, object$metric.cv[[3]])) == 0) {
+    if (length(object$metric.cv) == object$n.cv && sum(mapply(is.null, object$metric.cv)) == 0) {
       sum <- 0
       for (j in 1:object$n.cv) {
-        sum <- sum + object$metric.cv[[3]][[j]]
+        sum <- sum + object$metric.cv[[j]][[3]]
       }
       sum <- sum/object$n.cv
       
@@ -73,10 +73,10 @@ summary.DynPredJMMLSM <- function (object, digits = 4, ...) {
       stop("The cross validation fails on AUC. Please try using a different seed number.")
     }
     
-    if (length(object$metric.cv[[4]]) == object$n.cv && sum(mapply(is.null, object$metric.cv[[4]])) == 0) {
+    if (length(object$metric.cv) == object$n.cv && sum(mapply(is.null, object$metric.cv)) == 0) {
       sum <- 0
       for (j in 1:object$n.cv) {
-        sum <- sum + object$metric.cv[[4]][[j]]
+        sum <- sum + object$metric.cv[[j]][[4]]
       }
       sum <- sum/object$n.cv
       
@@ -88,7 +88,7 @@ summary.DynPredJMMLSM <- function (object, digits = 4, ...) {
     } else {
       stop("The cross validation fails on Cindex. Please try using a different seed number.")
     }
-    return(list(ExpectedMAPE = ExpectedMAPE,
+    invisible(list(ExpectedMAPE = ExpectedMAPE,
                 ExpectedBrier = ExpectedBrier,
                 ExpectedAUC = ExpectedAUC,
                 ExpectedCindex = ExpectedCindex))

@@ -102,6 +102,7 @@ DynPredJMMLSM <- function(seed = 100,
                quadpoint = quadpoint,
                maxiter = maxiter,
                opt = "optim",
+               epsilon = 1e-3,
                random = random), silent = TRUE)
     
     if ('try-error' %in% class(fit)) {
