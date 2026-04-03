@@ -276,7 +276,7 @@ DynPredJMMLSM <- function(seed = 100,
             Surv[k, 2] <- survfit[[k]]$Pred[[1]][j, 2]
           }
           
-          ROC <- timeROC::timeROC(T = Surv$time, delta = Surv$status,
+          ROC <- timeROC(T = Surv$time, delta = Surv$status,
                                   weighting = "marginal",
                                   marker = 1-Surv$Surv, cause = 1,
                                   times = horizon.time[j])

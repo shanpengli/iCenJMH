@@ -1,5 +1,5 @@
-##' @title Print DynPredAcciCenJMMLSM
-##' @name summary.DynPredAcciCenJMMLSM
+##' @title Print evaluation metrics for the fitted joint model
+##' @name summary
 ##' @aliases summary.DynPredAcciCenJMMLSM
 ##' @param object object of class 'DynPredAcciCenJMMLSM'.
 ##' @param digits number of digits of decimal to be printed. 

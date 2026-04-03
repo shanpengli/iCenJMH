@@ -245,7 +245,7 @@ DynPredAcciCenJMMLSM <- function(seed = 100, object, landmark.time = NULL, horiz
           }
           
           
-          ROC <- timeROC::timeROC(T = Surv$time, delta = Surv$status,
+          ROC <- timeROC(T = Surv$time, delta = Surv$status,
                                   weighting = "marginal",
                                   marker = -Surv$Surv, cause = 1,
                                   times = horizon.time[j])
